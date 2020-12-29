@@ -92,7 +92,7 @@ int find_matching_index(reference_list* rl, char* name) {
 }
 
 // super mega long function
-int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference_list* rl) {
+int apply_rule(line *l, term_t* t, reference_list* rl) {
 	int i, j;
 	int count = 0;
 	char* tmp = NULL;
@@ -164,7 +164,7 @@ int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference
 			if (
 				(rl->list[i].cont.int_val < atoi(t->argument_list[1]) && strcmp(t->functor, "lt") == 0) ||
 				(rl->list[i].cont.int_val > atoi(t->argument_list[1]) && strcmp(t->functor, "gt") == 0) ||
-				(strcmp(t->functor, "between") == 0) && rl->list[i].cont.int_val > atoi(t->argument_list[1]) && rl->list[i].cont.int_val < atoi(t->argument_list[2])
+				(strcmp(t->functor, "between") == 0) && (rl->list[i].cont.int_val > atoi(t->argument_list[1])) && (rl->list[i].cont.int_val < atoi(t->argument_list[2]))
 				) {
 				// printf("%d\n", rl->list[i].cont.int_val);
 				return SUCCESS;
@@ -318,19 +318,16 @@ int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference
 double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 	// loop trough term list
 	int i;
-	int line_extracted = 0;
 	line l;
 	int n_line_processed = 1;
 	clock_t begin = clock();
 	clock_t end;
-	int index = 1;
-	int result_int = -1;
 	int num;
 
 	if (strcmp("line", tl->list[0].functor) == 0) {
 		assert(tl->list[0].arity == 1 || tl->list[0].arity == 2);
 		assert(tl->list[0].argument_list[0] != NULL);
-		assert(tl->list[0].argument_list[1] != NULL);
+		// assert(tl->list[0].argument_list[1] != NULL);
 
 		if (isupper(tl->list[0].argument_list[0][0])) {
 			l.content = get_line(fp,&l.len);
@@ -348,12 +345,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 			while (l.content != NULL) {
 				// printf("%s\n", l.content);
 				for (i = 1; i < tl->n_elements; i++) {
-					if (apply_rule(&l, &tl->list[i], tl->list[0].argument_list[0], tl->list[0].argument_list[1], rl) < 0) {
+					if (apply_rule(&l, &tl->list[i], rl) < 0) {
 						break;
 					}
 				}
 
-				result_int = -1;
 				n_line_processed++;
 				free(l.content);
 
@@ -391,7 +387,7 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 				}
 				
 				for (i = 1; i < tl->n_elements; i++) {
-					if (apply_rule(&l, &tl->list[i], tl->list[0].argument_list[0], tl->list[0].argument_list[1], rl) < 0) {
+					if (apply_rule(&l, &tl->list[i], rl) < 0) {
 						break;
 					}
 				}

@@ -9,9 +9,11 @@
 #include "error.h"
 
 // set the element name to t
+/*
 void propagate_type(reference_list *rl, char* name, type t) {
 
 }
+*/
 
 // line(Index,Line): check that index is number and Line is a variable
 // line(Line)
@@ -211,7 +213,6 @@ void add_subterm(term_list* tl, char* name) {
 int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *rl) {
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
-    int n_par = 0; // number of parentheses to indicate whether we are in a term or not
 
     assert(*index_str <= (int) strlen(str));
 
@@ -311,10 +312,7 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
 }
 
 void parse_command(char* command_string, term_list* tl, reference_list* rl) {
-	int n_par = 0; // parentheses
-	int term_nesting = 0;
-    int index_str = 0;
-    int n_parentheses = 0;
+	int index_str = 0;
 	// check if the string is well formed
 	parse_command_rec(command_string, &index_str,tl,rl);
     print_reference_list(rl);
@@ -407,9 +405,11 @@ void free_term_list(term_list* t) {
 
 void free_ref_t(ref_t *t) {
     free(t->name);
+    /*
     if (t->t == LIST) {
         free(t->cont.list);
     }
+    */
 }
 
 void free_reference_list(reference_list* rl) {
