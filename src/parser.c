@@ -207,12 +207,11 @@ void add_subterm(term_list* tl, char* name) {
     snprintf(tl->list[tl->n_elements - 1].argument_list[tl->list[tl->n_elements - 1].arity - 1], strlen(name) + 1, "%s", name);
 }
 
-
+// TODO: handle space in string
 int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *rl) {
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
     int n_par = 0; // number of parentheses to indicate whether we are in a term or not
-    int in_string = 0;
 
     assert(*index_str <= (int) strlen(str));
 
@@ -223,19 +222,12 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
 
         if (isupper(str[*index_str])) {
             (*index_str)++;
-            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '\"') {
+            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '\"' && str[*index_str] != '\0') {
                 var_name[var_pos] = str[*index_str];
                 var_pos++;
                 (*index_str)++;
             }
             var_name[var_pos] = '\0';
-
-            if (str[*index_str] == '\"') {
-                (*index_str)++;
-                if (in_string == 1) {
-                    in_string = 0;
-                }
-            }
 
             // here i have the variable name
             add_reference(rl,var_name);            
@@ -245,18 +237,12 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         else if (islower(str[*index_str])) {
             // this is a constant or compound
             (*index_str)++;
-            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '(' && str[*index_str] != '\"') {
+            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '(' && str[*index_str] != '\"' && str[*index_str] != '\0') {
                 var_name[var_pos] = str[*index_str];
                 var_pos++;
                 (*index_str)++;
             }
             var_name[var_pos] = '\0';
-            if (str[*index_str] == '\"') {
-                (*index_str)++;
-                if (in_string == 1) {
-                    in_string = 0;
-                }
-            }
 
             if (str[*index_str] == ',' || str[*index_str] == ')') {
                 add_subterm(tl, var_name);
@@ -267,7 +253,7 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         }
         else if (isdigit(str[*index_str])) {
             (*index_str)++;
-            while (isdigit(str[*index_str])) {
+            while (isdigit(str[*index_str]) && str[*index_str] != '\0') {
                 var_name[var_pos] = str[*index_str];
                 var_pos++;
                 (*index_str)++;
@@ -282,9 +268,23 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
 
             add_subterm(tl, var_name);
         }
-        else {
-            // this is the case of * ? regex
+        else if (str[*index_str] == '"') {
+            var_pos = 0;
+            (*index_str)++;
+            while (str[*index_str] != '"' && str[*index_str] != '\0') {
+                var_name[var_pos] = str[*index_str];
+                var_pos++;
+                (*index_str)++;
+            }
+            var_name[var_pos] = '\0';
+            add_subterm(tl, var_name);
         }
+        /*
+        else {
+            snprintf(var_name, VAR_NAME_LEN, "Unrecognized char: %c\n", str[*index_str]);
+            print_parser_error(str, *index_str, var_name);
+        }
+        */
 
         // TODO: all the error stuff
         if (str[*index_str] == ',') {
@@ -297,34 +297,15 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         }
         else if (str[*index_str] == ')') {
             (*index_str)++;
-            // (*n_parentheses)--;
-            if (str[*index_str + 1] == ',') {
-                // term_pos++;
-            }
-            
-            // printf("already increased for: %d\n", current_index_functor);
-            // (*index_parsed)--;
-            // parse_command_rec(str, index_str, t_l, r_l,  n_parentheses,term_index, "findall", 2);
         }
         else if (str[*index_str] == ' ') {
             (*index_str)++;
-        }
-        else if (str[*index_str] == '\"') {
-            (*index_str)++;
-            if (in_string > 0) {
-                in_string = 0;
-            }
-            else {
-                in_string = 1;
-            }
         }
         else {
             // fallback
             (*index_str)++;
         }
     }
-
-    printf("In string: %d\n", in_string);
 
     return 0;
 }
@@ -352,7 +333,7 @@ void print_term_t(term_t* t) {
     int i;
     printf("Arity: %d, functor: %s, ", t->arity, t->functor);
     for (i = 0; i < t->arity; i++) {
-        printf("%s ",t->argument_list[i]);
+        printf("| %s ",t->argument_list[i]);
     }
 }
 

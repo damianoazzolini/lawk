@@ -73,7 +73,7 @@ char *read_command() {
 	// char *command = "line(L),occurrences(L,\"li\",N),write(N)"; // OK
 	// char *command = "line(L),startswith(L,\"lin\"), write(L)"; // OK
 	// char *command = "line(L),endswith(L,\"a2\"), write(L)"; // OK
-	char *command = "line(L),words(L,N),write(N)"; // OK
+	char *command = "line(L),words(L,N),write(\"ciao \",L, \" \", N)"; // OK
 	// char* command = "line(L),member(L,\"abc\"),write(L)";
 	
 	

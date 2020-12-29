@@ -117,19 +117,25 @@ int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference
 		// TODO: allow print in the specified format
 		// fprintf(outstream,"Unable to print %s\n", t->argument_list[0]);
 		// print_reference_list(rl);
-		i = find_matching_index(rl, t->argument_list[0]);
-		if (rl->list[i].t == INT) {
-			printf("%d\n", rl->list[i].cont.int_val);
-			return SUCCESS;
+		for (j = 0; j < t->arity; j++) {
+			if (isupper(t->argument_list[j][0])) {
+				i = find_matching_index(rl, t->argument_list[j]);
+				if (rl->list[i].t == INT) {
+					printf("%d", rl->list[i].cont.int_val);
+				}
+				else if (rl->list[i].t == FLOAT) {
+					printf("%lf", rl->list[i].cont.double_val);
+				}
+				else if (rl->list[i].t == LIST) {
+					printf("%s", rl->list[i].cont.list);
+				}
+			}
+			else {
+				printf("%s",t->argument_list[j]);
+			}
 		}
-		else if (rl->list[i].t == FLOAT) {
-			printf("%lf\n", rl->list[i].cont.double_val);
-			return SUCCESS;
-		}
-		else if (rl->list[i].t == LIST) {
-			printf("%s\n", rl->list[i].cont.list);
-			return SUCCESS;
-		}
+		printf("\n");
+		return SUCCESS;
 	}
 	else if (strcmp(t->functor, "even") == 0 || strcmp(t->functor, "odd") == 0 || strcmp(t->functor, "mod") == 0) {
 		i = find_matching_index(rl, t->argument_list[0]);
@@ -278,7 +284,7 @@ int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference
 		// replace(Line,"find","replace",LOut)
 	}
 	else if (strcmp(t->functor, "match") == 0) {
-		// TODO: implment
+		// TODO: implement
 		/*
 		for (i = 0; i < rl->n_elements; i++) {
 			if (strcmp(rl->list[i].name, t->argument_list[0]) == 0) {
@@ -288,7 +294,7 @@ int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference
 		*/
 	}
 	else if (strcmp(t->functor, "append") == 0) {
-		// TODO: implment
+		// TODO: implement
 		/*
 		for (i = 0; i < rl->n_elements; i++) {
 			if (strcmp(rl->list[i].name, t->argument_list[0]) == 0) {
@@ -298,14 +304,10 @@ int apply_rule(line *l, term_t* t, char* line_name, char* number_name, reference
 		*/
 	}
 	else if (strcmp(t->functor, "nth1") == 0) {
-		// TODO: implment
-		/*
-		for (i = 0; i < rl->n_elements; i++) {
-			if (strcmp(rl->list[i].name, t->argument_list[0]) == 0) {
-
-			}
-		}
-		*/
+		// TODO: implement
+		// nth1(L,2,E),
+		i = find_matching_index(rl, t->argument_list[0]);
+		// strsep
 	}
 	else {
 		printf("Predicate not found\n");
@@ -402,6 +404,9 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 		}
 		// TODO manage line(I,abc)
 
+	}
+	else {
+		printf("Expected a line\n");
 	}
 	
 	end = clock();
