@@ -64,8 +64,22 @@ char *read_command() {
 	// char* command = "line(L), length(L,6), write(L)"; // OK
 	// char *command = "line(I,L), even(I), write(L)"; // OK
 	// char *command = "line(I,L), odd(I), write(L)"; // OK
-
-	char *command = "line(I,L),mod(I,3,0), write(L)"; // 
+	// char *command = "line(I,L),mod(I,3,0), write(L)"; // OK
+	// char *command = "line(I,L), lt(I,3), write(L)"; // OK 
+	// char *command = "line(I,L), gt(I,3), write(L)"; // OK 
+	// char *command = "line(I,L), length(L,N), lt(N,3), write(L)"; // OK
+	// char *command = "line(I,L),between(I,5,10), write(L)"; // OK
+	// char *command = "line(L),occurrences(L,\"l\",N),write(N)"; // OK
+	// char *command = "line(L),occurrences(L,\"li\",N),write(N)"; // OK
+	// char *command = "line(L),startswith(L,\"lin\"), write(L)"; // OK
+	// char *command = "line(L),endswith(L,\"a2\"), write(L)"; // OK
+	char *command = "line(L),words(L,N),write(N)"; // OK
+	// char* command = "line(L),member(L,\"abc\"),write(L)";
+	
+	
+	// char *command = "line(I,L), write(\"ciso\")"; // OK
+	// char *command = "line(L),words(L,\"_\",N),write(N)"; // NEED to modify parser, otherwise loop, now there is a fallback
+	
 	return command;
 }
 

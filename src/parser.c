@@ -133,6 +133,25 @@ int check_singleton(reference_list* rl) {
     return count;
 }
 
+// TODO
+int check_arity(term_list* tl) {
+    int i;
+    for (i = 0; i < tl->n_elements; i++) {
+        if (
+            strcmp(tl->list[i].functor,"line") == 0 ||
+            // strcmp(tl->list[i].functor,"write") == 0 ||
+            strcmp(tl->list[i].functor,"even") == 0 ||
+            strcmp(tl->list[i].functor,"odd") == 0 ||
+            strcmp(tl->list[i].functor,"number") == 0 ||
+            strcmp(tl->list[i].functor,"letter") == 0 ||
+            strcmp(tl->list[i].functor,"alpha") == 0 
+
+            ) {
+            return SUCCESS;
+        }
+    }
+}
+
 int reference_already_present(reference_list* r_l, char* name) {
     int i;
 
@@ -193,6 +212,7 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
     int n_par = 0; // number of parentheses to indicate whether we are in a term or not
+    int in_string = 0;
 
     assert(*index_str <= (int) strlen(str));
 
@@ -203,12 +223,20 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
 
         if (isupper(str[*index_str])) {
             (*index_str)++;
-            while (str[*index_str] != ',' && str[*index_str] != ')') {
+            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '\"') {
                 var_name[var_pos] = str[*index_str];
                 var_pos++;
                 (*index_str)++;
             }
             var_name[var_pos] = '\0';
+
+            if (str[*index_str] == '\"') {
+                (*index_str)++;
+                if (in_string == 1) {
+                    in_string = 0;
+                }
+            }
+
             // here i have the variable name
             add_reference(rl,var_name);            
             // printf("%s\n", var_name);
@@ -217,15 +245,25 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         else if (islower(str[*index_str])) {
             // this is a constant or compound
             (*index_str)++;
-            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '(') {
+            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '(' && str[*index_str] != '\"') {
                 var_name[var_pos] = str[*index_str];
                 var_pos++;
                 (*index_str)++;
             }
             var_name[var_pos] = '\0';
-            // here i have the compound name
-            // printf("%s\n",var_name);     
-            add_term_t(tl, var_name);
+            if (str[*index_str] == '\"') {
+                (*index_str)++;
+                if (in_string == 1) {
+                    in_string = 0;
+                }
+            }
+
+            if (str[*index_str] == ',' || str[*index_str] == ')') {
+                add_subterm(tl, var_name);
+            }
+            else {
+                add_term_t(tl, var_name);
+            }
         }
         else if (isdigit(str[*index_str])) {
             (*index_str)++;
@@ -235,9 +273,13 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
                 (*index_str)++;
             }
             var_name[var_pos] = '\0';
+
+            /*
             if (str[*index_str] != ',' && str[*index_str] != ')') {
                 print_parser_error(str, *index_str, "Expected , or ) after a number");
             }
+            */
+
             add_subterm(tl, var_name);
         }
         else {
@@ -267,7 +309,22 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         else if (str[*index_str] == ' ') {
             (*index_str)++;
         }
+        else if (str[*index_str] == '\"') {
+            (*index_str)++;
+            if (in_string > 0) {
+                in_string = 0;
+            }
+            else {
+                in_string = 1;
+            }
+        }
+        else {
+            // fallback
+            (*index_str)++;
+        }
     }
+
+    printf("In string: %d\n", in_string);
 
     return 0;
 }
@@ -279,8 +336,9 @@ void parse_command(char* command_string, term_list* tl, reference_list* rl) {
     int n_parentheses = 0;
 	// check if the string is well formed
 	parse_command_rec(command_string, &index_str,tl,rl);
-    // print_reference_list(rl);
-    // print_term_list(tl);
+    print_reference_list(rl);
+    print_term_list(tl);
+    // check_arity(tl);
     check_singleton(rl);
 
 }

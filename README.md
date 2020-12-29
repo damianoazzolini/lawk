@@ -10,18 +10,19 @@ Variable are indicated with:
 - `?` can be a combination of the three above
 
 - `line/1` - `line(?Line)` represents a file line
-line/2 represents a file line and its line number (starting from 1): line(Number,Content)
-write/1 print the variable
-length/2 - length(+Line,?Len) check the length of the line, true if the lenght of the line is equal to Len, which can also be an integer
-even/1 - even(+Number) checks that the number is evem
-odd/1 - odd(+Number) checks that the number is odd
+- line/2 represents a file line and its line number (starting from 1): line(Number,Content)
+- write/1 print the variable
+- length/2 - length(+Line,?Len) check the length of the line, true if the lenght of the line is equal to Len, which can also be an integer
+- even/1 - even(+Number) checks that the number is evem
+- odd/1 - odd(+Number) checks that the number is odd
+- mod/3 - mod(+Number,-Mod,-Res)
+- lt/2 less than (arithmetic <)
+- gt/2 greater than (arithmetic >)
+- between/3
+- occurrences/3
+- startswith/2 line that starts with
+- endswith/2 line that ends with
 
-mod/3 - mod(+Number,-Mod,-Res)
-
-lt/2 less than (arithmetic <)
-gt/2 greater than (arithmetic >)
-startswith/2 line that starts with
-endswith/2 line that ends with
 member/2 line that contains
 eval/2 used to evaluate the expression represented by the line
 number/1 checks that the element is a number
@@ -39,25 +40,29 @@ Implemented
 - Print the length of line 1: `line(1,L), length(L,N), write(N)`
 - Print all the even positioned lines: `line(I,L),even(I), write(L)`
 - Print all the lines with length 3: `line(L),length(L,3), write(L)`
-
-Priority
 - Print all lines at step of 3: `line(I,L),mod(I,3,0), write(L)`
 - Print all the lines with length greater than 3: `line(L),length(L,N),gt(N,3),write(L)` 
-- Find all the lines of a file between 5 and 10: `line(I,L),between(5,10,I), write(L)`
+- Find all the lines of a file between 5 and 10: `line(I,L),between(I,5,10), write(L)`
 - Find the first 5 lines (head -n 5): `line(I,L), lt(I,5), write(L)`
+- Count the occurrences of a char in a line: `line(L),occurrences(L,"c",N),write(N)`
+- Count the occurrences of a substring in a line: `line(L),occurrences(L,"abc",N),write(N)`
+- Find all the lines that start with a certain pattern (abc): `line(L),startswith(L,"abc"), write(L)`
+- Find all the lines that end with a certain pattern (abc): `line(L),endswith(L,"abc"), write(L)`
+- Count the words of all lines, where words are separated by a space: `line(L),words(L,N),write(N)`
+- Count the words of all lines, where words are separated by a certain character (`_` in this example): `line(L),words(L,"_",N),write(N)`
+
+Priority
 - Find all the lines that contains at least one number: `line(L),member(L,N),number(N), write(L)`
+- Find all the lines that contains at least one number greater than 3: `line(L),member(L,N),gt(N,3), write(L)`
 - Count the words of a line: `line(1,L),words(L,N),write(N)`
-- Count the occurrences of a char in a line: `line(L),occurrences(L,c,N),write(N)`
+- Print the index of the line that is equal to abc: `line(I,"abc")`
 
 Queue
-- Print the index of the line that is equal to abc: `line(I,abc)`
 - Print all the even positioned lines and index: `line(I,L),even(I),write([L,I])`
-- Find all the lines that start with a certain pattern (abc): `line(L),startswith(L,"abc"), writeln(L)`
-- Find all the lines that end with a certain pattern (abc): `line(L),endswith(L,"abc"), write(L)`
 - Find all the lines that contains a certain pattern (abc): `line(L),member(L,"abc"),write(L)`
 - Find all the lines that contains a certain pattern: `line(L),match(L,"*a"),write(L)`
-- Count the words of all lines, where words are separated by a certain character (`_` in this example): `line(L),words(L,'_',N),write(N)`
-
+- Append a string to a line: line(I,L), append(L,"ciao",LO), write(LO)
+- Append a string to a line: line(I,L), append("ciao,L,LO), write(LO)
 
 You can also operate on file:
 - Count file line: `file(F),count_lines(F,N),writeln(N)`
