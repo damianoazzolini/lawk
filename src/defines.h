@@ -23,3 +23,4 @@
 #define PRINT_HELP -14
 #define MISSING_QUERY -15
 #define MISSING_FILENAME -16
+#define REVERSE_FAILURE -17
