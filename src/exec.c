@@ -25,7 +25,7 @@ char* get_line(FILE* fp, int *len_l) {
 		return NULL;
 	}
 
-	while (ch != '\n') {
+	while (ch != '\n' && ch != EOF  && !feof(fp)) {
 		len++;
 		l = realloc(l, len);
 		l[len - 1] = ch;
@@ -38,6 +38,57 @@ char* get_line(FILE* fp, int *len_l) {
 
 	return l;	
 }
+
+// You must free the result if result is non-NULL.
+// here to make more readable the mega if else in the other function
+// https://stackoverflow.com/questions/779875/what-function-is-to-replace-a-substring-from-a-string-in-c
+/*
+char* str_replace(char* source, char* find, char* replace) {
+	char* result; // the return string
+	char* ins;    // the next insert point
+	char* tmp;    // varies
+	int len_rep;  // length of rep (the string to remove)
+	int len_with; // length of with (the string to replace rep with)
+	int len_front; // distance between rep and end of last rep
+	int count;    // number of replacements
+
+	// sanity checks and initialization
+	if (source == NULL || replace == NULL || find == NULL) {
+		return NULL;
+	}
+	len_rep = strlen(find);
+	if (len_rep == 0)
+		return NULL; // empty rep causes infinite loop during count
+	len_with = strlen(replace);
+
+	// count the number of replacements needed
+	ins = source;
+	for (count = 0; tmp = strstr(ins, replace); ++count) {
+		ins = tmp + len_rep;
+	}
+
+	tmp = result = malloc(strlen(source) + (len_with - len_rep) * count + 1);
+
+	if (!result)
+		return NULL;
+
+	// first time through the loop, all the variable are set correctly
+	// from here on,
+	//    tmp points to the end of the result string
+	//    ins points to the next occurrence of rep in orig
+	//    orig points to the remainder of orig after "end of rep"
+	while (count--) {
+		ins = strstr(source, find);
+		len_front = ins - source;
+		tmp = strncpy(tmp, source, len_front) + len_front;
+		tmp = strcpy(tmp, replace) + len_with;
+		source += len_front + len_rep; // move to next "end of rep"
+	}
+	// strcpy(tmp, source);
+	snprintf(tmp, strlen(source) + (len_with - len_rep) * count + 1, "%s", source);
+	return result;
+}
+*/
 
 // TODO: it requires also the modification of the parser, to read a float
 /*
@@ -117,8 +168,9 @@ int associate_str_copy(reference_list* rl, char* name, char* value) {
 void free_ref_t_to_free(reference_list* rl) {
 	int i;
 	for (i = 0; i < rl->n_elements; i++) {
-		if (rl->list[i].to_free == 1) {
+		if (rl->list[i].to_free == 1 && rl->list[i].t == LIST) {
 			free(rl->list[i].cont.list);
+			rl->list[i].to_free = 0;
 		}
 	}
 }
@@ -340,6 +392,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 	else if (strcmp(t->functor, "replace") == 0) {
 		// TODO: implement
 		// replace(Line,"find","replace",LOut)
+		i = find_matching_index(rl, t->argument_list[0]);
+
 		// replace(Line,F,R,result) -> what F and R should be to obtain result?
 	}
 	else if (strcmp(t->functor, "match") == 0) {
@@ -351,6 +405,72 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		// append(L,"abc",LO) -> LO = Labc
 		// append(L,"abc",labc) -> true / false
 		// append(L,M,labc) -> find what is missing to have labc starting from L
+		i = find_matching_index(rl, t->argument_list[0]);
+		if (rl->list[i].t == LIST) {
+			if (islower(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) {
+				// append(L, "abc", LO)->LO = Labc
+				tmp = malloc(strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 2);
+				snprintf(tmp, strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 1, "%s%s", rl->list[i].cont.list, t->argument_list[1]);
+				associate_str_copy(rl, t->argument_list[2], tmp);
+				free(tmp);
+				tmp = NULL;
+				return SUCCESS;
+			}
+			else if (islower(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
+				// append(L,"abc",labc) -> true / false
+				tmp = malloc(strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 2);
+				snprintf(tmp, strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 1, "%s%s", rl->list[i].cont.list, t->argument_list[1]);
+				if (strcmp(tmp, t->argument_list[2]) == 0) {
+					printf("true\n");
+					free(tmp);
+					tmp = NULL;
+					return SUCCESS;
+				}
+				else {
+					printf("false\n");
+					free(tmp);
+					tmp = NULL;
+					return FAILURE;
+				}
+			}
+			else if (isupper(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
+				// append(L,M,labc) -> find what is missing to have labc starting from L
+				if (strlen(rl->list[i].cont.list) > strlen(t->argument_list[2])) {
+					printf("false\n");
+					return FAILURE;
+				}
+				if (strcmp(rl->list[i].cont.list,t->argument_list[2]) == 0) {
+					// printf("false\n");
+					// strings are equal
+					associate_str_copy(rl, t->argument_list[1], "");
+					return SUCCESS;
+				}
+				j = 0;
+				while ((rl->list[i].cont.list[j] == t->argument_list[2][j]) && rl->list[i].cont.list[j] != '\0' && t->argument_list[2][j] != '\0') {
+					j++;
+				}
+				// if we do not terminate the input string then they cannot be equal
+				// in anyway
+				if (rl->list[i].cont.list[j] != '\0') {
+					printf("false\n");
+					return FAILURE;
+				}
+				tmp = malloc(strlen(t->argument_list[2]) - j + 2);
+				for (i = 0; i < strlen(t->argument_list[2]) - j; i++) {
+					tmp[i] = t->argument_list[2][j + i];
+				}
+				tmp[i] = '\0';
+				associate_str_copy(rl, t->argument_list[1], tmp);
+				free(tmp);
+				tmp = NULL;
+				return SUCCESS;
+			}
+		}
+		else {
+			printf("Unable to append\n");
+			exit(APPEND_FAILURE);
+		}
+
 	}
 	else if (strcmp(t->functor, "nth1") == 0) {
 		// TODO: implement
@@ -390,7 +510,7 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 		assert(tl->list[0].argument_list[0] != NULL);
 		// assert(tl->list[0].argument_list[1] != NULL);
 
-		if (isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 2 && isupper(tl->list[0].argument_list[1][0])) {
+		if ((isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 2 && isupper(tl->list[0].argument_list[1][0])) || (isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 1) ) {
 			l.content = get_line(fp,&l.len);
 			l.number = n_line_processed;
 			if (tl->list[0].arity == 2) {
