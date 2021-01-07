@@ -1,19 +1,20 @@
+#define _CRT_SECURE_NO_DEPRECATE // used for visual studio for strcpy and strncpy. TODO: replace with snprintf
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
 #include <stdlib.h>
-
 #include "defines.h"
 #include "exec.h"
 #include "parser.h"
-
 /* TODO:
 
 
 */
+// #ifdef _WIN32
 // really primitive implementation
+// since getline is not available in windows
 char* get_line(FILE* fp, int *len_l) {
 	char* l = NULL;
 	char ch;
@@ -38,12 +39,15 @@ char* get_line(FILE* fp, int *len_l) {
 
 	return l;	
 }
+// #endif
+
 
 // You must free the result if result is non-NULL.
 // here to make more readable the mega if else in the other function
 // https://stackoverflow.com/questions/779875/what-function-is-to-replace-a-substring-from-a-string-in-c
-/*
+
 char* str_replace(char* source, char* find, char* replace) {
+	// DOES NOT WORK
 	char* result; // the return string
 	char* ins;    // the next insert point
 	char* tmp;    // varies
@@ -88,7 +92,6 @@ char* str_replace(char* source, char* find, char* replace) {
 	snprintf(tmp, strlen(source) + (len_with - len_rep) * count + 1, "%s", source);
 	return result;
 }
-*/
 
 // TODO: it requires also the modification of the parser, to read a float
 /*
@@ -160,7 +163,7 @@ int associate_str_copy(reference_list* rl, char* name, char* value) {
 	}
 
 	printf("Term not found\n");
-	return FAILURE;
+	exit(TERM_NOT_FOUND);
 }
 
 // used to free the memory allocated in, for example
@@ -169,7 +172,10 @@ void free_ref_t_to_free(reference_list* rl) {
 	int i;
 	for (i = 0; i < rl->n_elements; i++) {
 		if (rl->list[i].to_free == 1 && rl->list[i].t == LIST) {
-			free(rl->list[i].cont.list);
+			if(rl->list[i].cont.list != NULL) {
+				free(rl->list[i].cont.list);
+			}
+			rl->list[i].cont.list = NULL;
 			rl->list[i].to_free = 0;
 		}
 	}
@@ -187,13 +193,48 @@ int find_matching_index(reference_list* rl, char* name) {
 	exit(INDEX_NOT_FOUND);
 }
 
+// used in nth
+int find_indexes_string(char *str, char ch, int pos, int *start, int *end) {
+	int count = 0;
+	int prev_start = 0;
+	int j = 0;
+	
+	while (count != pos && str[j] != '\0') {
+		if (str[j] == ch) {
+			count++;
+			prev_start = *start;
+			*end = j;
+			// to eat a replication of the separator
+			while (str[j] == ch) {
+				j++;
+			}
+			*start = j;
+		}
+		else {
+			j++;
+		}
+	}
+	if (str[j] == '\0' && str[j - 1] != ch) {
+		count++;
+		prev_start = *start;
+		*end = j;
+	}
+
+	*start = prev_start;
+
+	return count;
+}
+
 // super mega long function
 int apply_rule(line *l, term_t* t, reference_list* rl) {
 	int i, j;
+	int v1, v2;
 	int count = 0;
 	char* tmp = NULL;
 	char ch;
-	
+	int start = 0, end;
+	char* ts1 = NULL, * ts2 = NULL;
+
 	if (strcmp(t->functor, "length") == 0) {
 		if (isdigit(t->argument_list[1][0])) {
 			// lenght(L,2)
@@ -280,7 +321,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		// member(L,1): same as above
 		// also need to associate N to the value, associate_str()
 		// TODO: implement using strstr
-		// credo che devo implementare una funzione apposta per member, nel ciclo più esterno
+		// credo che devo implementare una funzione apposta per member, nel ciclo piï¿½ esterno
 	}
 	else if (strcmp(t->functor, "number") == 0) {
 		// number(N): check if the char is number
@@ -393,6 +434,42 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		// TODO: implement
 		// replace(Line,"find","replace",LOut)
 		i = find_matching_index(rl, t->argument_list[0]);
+		if (islower(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
+			// both ground
+			ts1 = t->argument_list[1];
+			ts2 = t->argument_list[2];
+		}
+		else if (islower(t->argument_list[1][0]) && (isupper(t->argument_list[2][0]) || isdigit(t->argument_list[2][0]))) {
+			ts1 = t->argument_list[1];
+			if (isupper(t->argument_list[2][0])) {
+				j = find_matching_index(rl, t->argument_list[2]);
+				ts2 = rl->list[j].cont.list;
+			}
+			else if (isdigit(t->argument_list[2][0])) {
+				ts2 = t->argument_list[2];
+			}
+		}
+		else if (islower(t->argument_list[2][0]) && (isupper(t->argument_list[1][0]) || isdigit(t->argument_list[1][0]))) {
+			ts2 = t->argument_list[2];
+			if (isupper(t->argument_list[1][0])) {
+				j = find_matching_index(rl, t->argument_list[1]);
+				ts1 = rl->list[j].cont.list;
+			}
+			else if (isdigit(t->argument_list[1][0])) {
+				ts1 = t->argument_list[1];
+			}
+		}
+
+		tmp = str_replace(rl->list[i].cont.list, ts1, ts2);
+		if (tmp != NULL) {
+			associate_str_copy(rl, t->argument_list[3], tmp);
+			free(tmp);
+			tmp = NULL;
+			return SUCCESS;
+		}
+		else {
+			return FAILURE;
+		}
 
 		// replace(Line,F,R,result) -> what F and R should be to obtain result?
 	}
@@ -401,7 +478,6 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		// regex
 	}
 	else if (strcmp(t->functor, "append") == 0) {
-		// TODO: implement
 		// append(L,"abc",LO) -> LO = Labc
 		// append(L,"abc",labc) -> true / false
 		// append(L,M,labc) -> find what is missing to have labc starting from L
@@ -473,19 +549,159 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 
 	}
 	else if (strcmp(t->functor, "nth1") == 0) {
-		// TODO: implement
 		// nth1(L,2,E) -> E is the second element
 		// nth1(L,2,"abc") -> true when abc is the second element
 		i = find_matching_index(rl, t->argument_list[0]);
 		// strsep
+		
+		if (t->arity == 3 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) || t->arity == 4 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[3][0]))) {
+			// nth1(L, 2, E)->E is the second element
+			// TODO: does not work with number
+			count = 0;
+			start = 0; 
+			end = 0;
+			j = 0;
+			if (t->arity == 4) {
+				ch = t->argument_list[2][0];
+			}
+			else {
+				ch = ' ';
+			}
+			count = find_indexes_string(rl->list[i].cont.list, ch, atoi(t->argument_list[1]), &start, &end);
+			
+			if (count == atoi(t->argument_list[1])) {
+				// found it
+				tmp = malloc(end - start + 2);
+				// strncpy(tmp, rl->list[i].cont.list + prev_start, end - prev_start);
+				snprintf(tmp, end - start + 1, "%s", rl->list[i].cont.list + start);
+				// tmp[end - prev_start] = '\0';
+				if (t->arity == 3) {
+					associate_str_copy(rl, t->argument_list[2], tmp);
+				}
+				else {
+					associate_str_copy(rl, t->argument_list[3], tmp);
+				}
+				free(tmp);
+				return SUCCESS;
+			}
+			else {
+				printf("Unable to access nth\n");
+				exit(NTH_ERROR);
+			}
+		}
+		else if (t->arity == 3 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[2][0])) || t->arity == 4 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[3][0]))) {
+			// nth1(L,2,"abc") 
+			count = 0;
+			start = 0; 
+			end = 0;
+			j = 0;
+			if (t->arity == 4) {
+				ch = t->argument_list[2][0];
+			}
+			else {
+				ch = ' ';
+			}
+			count = find_indexes_string(rl->list[i].cont.list, ch, atoi(t->argument_list[1]), &start, &end);
+			if (count == atoi(t->argument_list[1])) {
+				// found it
+				tmp = malloc(end - start + 2);
+				// strncpy(tmp, rl->list[i].cont.list + prev_start, end - prev_start);
+				snprintf(tmp, end - start + 1, "%s", rl->list[i].cont.list + start);
+				// tmp[end - prev_start] = '\0';
+				if ((t->arity == 3 && strcmp(t->argument_list[2],tmp) == 0) || (t->arity == 4 && strcmp(t->argument_list[3], tmp) == 0)) {
+					free(tmp);
+					return SUCCESS;
+				}
+				else {
+					free(tmp);
+					return FAILURE;
+				}
+			}
+			else {
+				printf("Unable to access nth\n");
+				exit(NTH_ERROR);
+			}
+		}
+
 	}
 	else if (strcmp(t->functor, "add") == 0 || strcmp(t->functor, "mul") == 0 || strcmp(t->functor, "sub") == 0 || strcmp(t->functor, "div") == 0) {
-		// TODO: implement
 		// add(L,2,3) -> true or false
 		// add(L,2,R) -> R = L + 2
 		// add(L,V,R) -> R = L + V
 		i = find_matching_index(rl, t->argument_list[0]);
-		// strsep
+		
+		if (rl->list[i].t != INT && rl->list[i].t != FLOAT) {
+			printf("Expected int or float\n");
+			exit(EXPECTED_NUMBER);
+		}
+
+		j = rl->list[i].cont.int_val; // this works only for int
+		
+		if (isdigit(t->argument_list[1][0]) && isdigit(t->argument_list[2][0])) {
+			// add(L,2,3) -> true or false
+			v1 = atoi(t->argument_list[1]);
+			v2 = atoi(t->argument_list[2]);
+			if (
+				(strcmp(t->functor, "add") == 0 && j + v1 == v2) ||
+				(strcmp(t->functor, "mul") == 0 && j * v1 == v2) ||
+				(strcmp(t->functor, "sub") == 0 && j - v1 == v2) ||
+				(strcmp(t->functor, "div") == 0 && j / v1 == v2)
+				) {
+				return SUCCESS;
+			}
+			else {
+				return FAILURE;
+			}
+		}
+		else if (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) {
+			// add(L,2,R) -> R = L + 2
+			v1 = atoi(t->argument_list[1]);
+			if (strcmp(t->functor, "add") == 0) {
+				associate_int(rl, t->argument_list[2], j + v1);
+			}
+			else if (strcmp(t->functor, "mul") == 0) {
+				associate_int(rl, t->argument_list[2], j * v1);
+			}
+			else if (strcmp(t->functor, "sub") == 0) {
+				associate_int(rl, t->argument_list[2], j - v1);
+			}
+			else if (strcmp(t->functor, "div") == 0) {
+				associate_int(rl, t->argument_list[2], j / v1);
+			}
+			else {
+				printf("Operation inexistent\n");
+				exit(UNKNOWN_FUNCTOR);
+			}
+
+		}
+		else if (isupper(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) {
+			// add(L,V,R) -> R = L + V
+			i = find_matching_index(rl, t->argument_list[1]);
+
+			if (rl->list[i].t != INT && rl->list[i].t != FLOAT) {
+				printf("Expected int or float\n");
+				exit(EXPECTED_NUMBER);
+			}
+
+			v1 = rl->list[i].cont.int_val; // this works only for int
+
+			if (strcmp(t->functor, "add") == 0) {
+				associate_int(rl, t->argument_list[2], j + v1);
+			}
+			else if (strcmp(t->functor, "mul") == 0) {
+				associate_int(rl, t->argument_list[2], j * v1);
+			}
+			else if (strcmp(t->functor, "sub") == 0) {
+				associate_int(rl, t->argument_list[2], j - v1);
+			}
+			else if (strcmp(t->functor, "div") == 0) {
+				associate_int(rl, t->argument_list[2], j / v1);
+			}
+			else {
+				printf("Operation inexistent\n");
+				exit(UNKNOWN_FUNCTOR);
+			}
+		}
 	}
 	else {
 		printf("Predicate not found\n");
@@ -511,7 +727,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 		// assert(tl->list[0].argument_list[1] != NULL);
 
 		if ((isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 2 && isupper(tl->list[0].argument_list[1][0])) || (isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 1) ) {
+			// #ifdef _WIN32
 			l.content = get_line(fp,&l.len);
+			// #else 
+			// getline(&l.content,&l.len,fp);
+			// #endif
 			l.number = n_line_processed;
 			if (tl->list[0].arity == 2) {
 				// line(I,L)
@@ -537,7 +757,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 				n_line_processed++;
 				free(l.content);
 
+				// #ifdef _WIN32
 				l.content = get_line(fp,&l.len);
+				// #else 
+				// getline(&l.content,&l.len,fp);
+				// #endif
 				l.number = n_line_processed;
 				if (tl->list[0].arity == 2) {
 					// line(I,L)
@@ -554,14 +778,22 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 			// here is line(1,N), so the first is number
 			num = atoi(tl->list[0].argument_list[0]);
 			if (num > 0) {
-				l.content = get_line(fp, &l.len);
+				// #ifdef _WIN32
+				l.content = get_line(fp,&l.len);
+				// #else 
+				// getline(&l.content,&l.len,fp);
+				// #endif
 				l.number = n_line_processed;
 				associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
 				while (l.content != NULL && l.number != num) {
 					n_line_processed++;
 					free(l.content);
 
-					l.content = get_line(fp, &l.len);
+					// #ifdef _WIN32
+					l.content = get_line(fp,&l.len);
+					// #else 
+					// getline(&l.content,&l.len,fp);
+					// #endif
 					l.number = n_line_processed;
 					associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
 				}
@@ -588,7 +820,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 		else {
 			if (tl->list[0].arity == 2 && isupper(tl->list[0].argument_list[0][0])) {
 				// line(I,abc)
-				l.content = get_line(fp, &l.len);
+				// #ifdef _WIN32
+				l.content = get_line(fp,&l.len);
+				// #else 
+				// getline(&l.content,&l.len,fp);
+				// #endif
 				l.number = n_line_processed;
 				associate_int(rl, tl->list[0].argument_list[0], l.number);
 				
@@ -609,7 +845,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 					n_line_processed++;
 					free(l.content);
 
-					l.content = get_line(fp, &l.len);
+					// #ifdef _WIN32
+					l.content = get_line(fp,&l.len);
+					// #else 
+					// getline(&l.content,&l.len,fp);
+					// #endif
 					l.number = n_line_processed;
 					
 					associate_int(rl, tl->list[0].argument_list[0], l.number);
@@ -621,14 +861,22 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
 				
 				num = atoi(tl->list[0].argument_list[0]);
 				if (num > 0) {
-					l.content = get_line(fp, &l.len);
+					// #ifdef _WIN32
+					l.content = get_line(fp,&l.len);
+					// #else 
+					// getline(&l.content,&l.len,fp);
+					// #endif
 					l.number = n_line_processed;
 					// associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
 					while (l.content != NULL && l.number != num) {
 						n_line_processed++;
 						free(l.content);
 
-						l.content = get_line(fp, &l.len);
+						// #ifdef _WIN32
+						l.content = get_line(fp,&l.len);
+						// #else 
+						// getline(&l.content,&l.len,fp);
+						// #endif
 						l.number = n_line_processed;
 						// associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
 					}

@@ -12,6 +12,7 @@ typedef struct {
 	type t;
 	content cont;
 	int reference_count;
+	int to_free; // set to 1 if t is list and has been copied (associate_str_copy). needed to free in every loop
 } ref_t;
 
 typedef struct {

@@ -43,7 +43,7 @@ void print_help() {
 // lawq <file> [arguments]
 void parse_arguments(int argc, char** argv) {
 	int i;
-	for (i = 0; i < argc; i++) {
+	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query") == 0) {
 			if (i == argc - 1) {
 				printf("Expected query");
@@ -68,36 +68,10 @@ void parse_arguments(int argc, char** argv) {
 	}
 }
 
-// findall(L,(line(I,L),even(I)),Lines)
-
-// TODO: create a structure to save the relation
-// name -> type and then in the term set the index of this
-// reference
-
-// length(L,N), geq(N,3)
-// 0, L, list
-// 1, N, int
-// 2, 3, int const
-
-// arity: 2
-// functor: length
-// references: 0, 1 
-
-// arity: 2
-// functor: geq
-// references: 2, 3
-
-// findall(L,(line(I,L),even(I)),Lines)
-
-// functor: findall - arity: 3
-// list:
-	// functor L, arity 0, ref 0, term_list null 
-	// functor line
-
-FILE *open_file(const char *filename) {
+FILE *open_file(const char *file) {
 	FILE *fp = NULL;
 
-	fp = fopen(filename,"r");
+	fp = fopen(file,"r");
 	if(fp == NULL) {
 		// TODO: ask another name, maybe look in the folder to find something
 		exit(FILE_NOT_FOUND);
@@ -121,47 +95,47 @@ char *read_command() {
 	// char *command = "line(L),occurrences(L,\"li\",N),write(N)"; // OK
 	// char *command = "line(L),startswith(L,\"lin\"), write(L)"; // OK
 	// char *command = "line(L),endswith(L,\"a2\"), write(L)"; // OK
-	char *command = "line(L),words(L,N),write(\"ciao \",L, \" \", N)"; // OK
+	// char *command = "line(L),words(L,N),write(\"ciao \",L, \" \", N)"; // OK
+	// char* command = "line(I,L), reverse(L,LRev), write(LRev)"; // OK
+	// char* command = "line(I, \"linea5\"), write(I)"; // OK
+	// char* command = "line(4, \"linea5\")"; // OK
+	// char* command = "line(L),append(L,\"abc\",LO), write(LO)"; // OK
+	// char* command = "line(L),append(L,\"abc\",\"inea12abc\")"; // OK
+	// char* command = "line(L),append(L,M,\"inea12abc\"),write(L, \"-> \",M)"; // OK
+	// char* command = "line(L),append(L,M,\"inea12abc\"),write(L, \"-> \",M)"; // OK
+	// char* command = "line(I,L),add(I,2,V),mul(V,I,V2),write(V2)"; // OK
+	// char* command = "line(L),nth1(L,1,V),write(V)"; // OK 
+	// char* command = "line(L),nth1(L,2,V),write(V)"; // OK
+	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
+	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
+	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
+	// char* command = "line(L),replace(L,\"a\",\"b\",R),write(R)"; // OK
+
+
+	// ---- NOT OK
+	// char* command = "line(I,L),nth1(L,2,\"45\"),write(I)"; 
+	// char* command = "line(I,L),nth1(L,2,45),write(I)";
 	// char* command = "line(L),member(L,\"abc\"),write(L)";
 	
 	
 	// char *command = "line(I,L), write(\"ciso\")"; // OK
 	// char *command = "line(L),words(L,\"_\",N),write(N)"; // NEED to modify parser, otherwise loop, now there is a fallback
-	
+	char *command = malloc(256);
+	size_t n;
+	printf("?- ");
+	fgets(command, 256, stdin);
 	return command;
 }
-
-// copied from https://stackoverflow.com/questions/20460670/reading-a-file-to-string-with-mmap
-/*
-void read_file(FILE* fp) {
-    struct stat s;
-    int status = fstat(fp, &s);
-    int size;
-    unsigned char* f;
-
-    size = s.st_size;
-
-    // f = (char*)mmap(0, size, PROT_READ, MAP_PRIVATE, fp, 0);
-    f = (char*)mmap(0, size, 1, 2, fp, 0);
-    for (int i = 0; i < size; i++) {
-        char c;
-
-        c = f[i];
-        putchar(c);
-    }
-
-}
-*/
 
 // TODO: store history of the commands
 
 int main(int argc, char **argv) {
     reference_list ref_list;
 	term_list t_list;
+	FILE* fp;
+	char *command_in;
 
 	double exec_time = 0.0;
-
-	// todo: check if file exists
 
 	ref_list.list = NULL;
 	ref_list.n_elements = 0;
@@ -176,33 +150,42 @@ int main(int argc, char **argv) {
 		exit(MISSING_FILENAME);
 	}
 
+	printf("filename: %s\n",filename);
+	fp = open_file(filename);
+
 	/*
 	if(interactive == 1) {
 	}
 	*/
 	// TODO: while loop
-	char *command_in = read_command();
+	command_in = read_command();
+	if(command_in != NULL) {
+		// char *command_in = "line(I,L),write(L)";
 
-	printf("Command: %s\n", command_in);
+		// printf("Command: %s\n", command_in);
+		
+		parse_command(command_in, &t_list, &ref_list);
+
+
+		outstream = stdout;
+		
+		exec_time = exec_command(fp, &t_list, &ref_list);
+
+		fclose(fp);
+
+		// free(command_in);
+
+		printf("Executed in %lfs\n", exec_time);
+
+		free_reference_list(&ref_list);
+		// free_term_list(&t_list);
+
+		// free(command);
+		return SUCCESS;
+	}
+	else {
+		printf("Command null\n");
+		return FAILURE;
+	}
 	
-	parse_command(command_in, &t_list, &ref_list);
-
-	FILE* fp = open_file("test.txt");
-
-	outstream = stdout;
-	
-	exec_time = exec_command(fp, &t_list, &ref_list);
-
-	fclose(fp);
-
-	printf("Executed in %lfs\n", exec_time);
-
-	// free_reference_list(&ref_list);
-	// free_term_list(&t_list);
-
-	
-
-	// free(command);
-
-	return SUCCESS;
 }

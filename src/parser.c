@@ -209,7 +209,7 @@ void add_subterm(term_list* tl, char* name) {
     snprintf(tl->list[tl->n_elements - 1].argument_list[tl->list[tl->n_elements - 1].arity - 1], strlen(name) + 1, "%s", name);
 }
 
-// TODO: handle space in string
+// TODO: handle floating point numbers (.)
 int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *rl) {
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
@@ -315,8 +315,8 @@ void parse_command(char* command_string, term_list* tl, reference_list* rl) {
 	int index_str = 0;
 	// check if the string is well formed
 	parse_command_rec(command_string, &index_str,tl,rl);
-    print_reference_list(rl);
-    print_term_list(tl);
+    // print_reference_list(rl);
+    // print_term_list(tl);
     // check_arity(tl);
     check_singleton(rl);
 
