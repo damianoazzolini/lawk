@@ -1,5 +1,3 @@
-#define _CRT_SECURE_NO_DEPRECATE
-
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -121,7 +119,7 @@ char *read_command() {
 	// char *command = "line(I,L), write(\"ciso\")"; // OK
 	// char *command = "line(L),words(L,\"_\",N),write(N)"; // NEED to modify parser, otherwise loop, now there is a fallback
 	char *command = malloc(256);
-	size_t n;
+	// size_t n;
 	printf("?- ");
 	fgets(command, 256, stdin);
 	return command;
@@ -132,7 +130,7 @@ char *read_command() {
 int main(int argc, char **argv) {
     reference_list ref_list;
 	term_list t_list;
-	FILE* fp;
+	FILE* fp, *outstream;
 	char *command_in;
 
 	double exec_time = 0.0;
@@ -169,7 +167,7 @@ int main(int argc, char **argv) {
 
 		outstream = stdout;
 		
-		exec_time = exec_command(fp, &t_list, &ref_list);
+		exec_time = exec_command(fp, &t_list, &ref_list, outstream);
 
 		fclose(fp);
 

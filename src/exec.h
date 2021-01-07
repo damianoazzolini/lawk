@@ -1,8 +1,6 @@
 #pragma once
 #include "parser.h"
 
-FILE* outstream;
-
 typedef struct line {
 	int number;
 	size_t len;
@@ -15,5 +13,5 @@ char *built_in[] = {
 };
 */
 
-double exec_command(FILE *fp, term_list* tl, reference_list* rl);
-char* get_line(FILE* fp, int* len_l);
+double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream);
+char* get_line(FILE* fp, size_t* len_l);

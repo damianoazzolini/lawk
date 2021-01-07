@@ -15,7 +15,7 @@
 // #ifdef _WIN32
 // really primitive implementation
 // since getline is not available in windows
-char* get_line(FILE* fp, int *len_l) {
+char* get_line(FILE* fp, size_t *len_l) {
 	char* l = NULL;
 	char ch;
 	int len = 0;
@@ -35,7 +35,7 @@ char* get_line(FILE* fp, int *len_l) {
 	l = realloc(l, len + 1);
 	l[len] = '\0';
 
-	*len_l = len;
+	*len_l = (size_t)len; // TODO: abominio, use *len_l
 
 	return l;	
 }
@@ -709,7 +709,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 	}
 }
 
-double exec_command(FILE *fp, term_list* tl, reference_list* rl) {
+double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream) {
 	// loop trough term list
 	int i;
 	line l;
