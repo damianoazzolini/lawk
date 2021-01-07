@@ -151,11 +151,7 @@ int main(int argc, char **argv) {
 	printf("filename: %s\n",filename);
 	fp = open_file(filename);
 
-	/*
-	if(interactive == 1) {
-	}
-	*/
-	// TODO: while loop
+	
 	command_in = read_command();
 	if(command_in != NULL) {
 		// char *command_in = "line(I,L),write(L)";
@@ -173,7 +169,7 @@ int main(int argc, char **argv) {
 
 		// free(command_in);
 
-		printf("Executed in %lfs\n", exec_time);
+		printf("Executed in %lfs\n", exec_time < 0 ? 0 : exec_time);
 
 		free_reference_list(&ref_list);
 		// free_term_list(&t_list);

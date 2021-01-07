@@ -26,28 +26,14 @@ void print_parser_error(char* str, int pos, char* message) {
     exit(PARSER_ERROR);
 }
 
-void print_unbalanced_parentheses_error(char* str, char* filename, int line) {
-    int i;
-    int n = 0;
-    // a(a,d(e))
-    // -1---2-21
-    printf("Unbalanced parentheses %s: %d\n%s\n", filename, line, str);
-
-    for (i = 0; i < (int)strlen(str); i++) {
-        if (str[i] == '(') {
-            printf("%d", n);
-            n++;
-        }
-        else if (str[i] == ')') {
-            n--;
-            printf("%d", n);
-        }
-        else {
-            printf("-");
-        }
-    }
-
+void print_unbalanced_parentheses_error() {
+    printf("Unbalanced parentheses\n");
     exit(UNBALANCED_PARENTHESES_ERROR);
+}
+
+void print_missing_quote() {
+    printf("Missing quote\n");
+    exit(MISSING_QUOTE);
 }
 
 void print_realloc_error(const char* str) {

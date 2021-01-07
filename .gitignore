@@ -1,3 +1,4 @@
 *.o
 src/lawk
 src/test.txt
+.vscode

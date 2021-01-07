@@ -135,23 +135,42 @@ int check_singleton(reference_list* rl) {
     return count;
 }
 
-// TODO
 int check_arity(term_list* tl) {
     int i;
     for (i = 0; i < tl->n_elements; i++) {
         if (
-            strcmp(tl->list[i].functor,"line") == 0 ||
-            // strcmp(tl->list[i].functor,"write") == 0 ||
-            strcmp(tl->list[i].functor,"even") == 0 ||
-            strcmp(tl->list[i].functor,"odd") == 0 ||
-            strcmp(tl->list[i].functor,"number") == 0 ||
-            strcmp(tl->list[i].functor,"letter") == 0 ||
-            strcmp(tl->list[i].functor,"alpha") == 0 
-
+            (strcmp(tl->list[i].functor,"line") == 0 && (tl->list[i].arity == 1 || tl->list[i].arity == 2)) ||
+            (strcmp(tl->list[i].functor,"write") == 0) ||
+            (strcmp(tl->list[i].functor,"even") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"odd") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"number") == 0 && tl->list[i].arity == 1)||
+            (strcmp(tl->list[i].functor,"letter") == 0 && tl->list[i].arity == 1) ||
+            (strcmp(tl->list[i].functor,"alpha") == 0 && tl->list[i].arity == 1) || 
+            (strcmp(tl->list[i].functor,"length") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"mod") == 0 && tl->list[i].arity == 3) ||
+            (strcmp(tl->list[i].functor,"gt") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"lt") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"between") == 0 && tl->list[i].arity == 3) || 
+            (strcmp(tl->list[i].functor,"occurrences") == 0 && tl->list[i].arity == 3) || 
+            (strcmp(tl->list[i].functor,"startswith") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"endswith") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"reverse") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"words") == 0 && (tl->list[i].arity == 2 || tl->list[i].arity == 3)) ||
+            (strcmp(tl->list[i].functor,"nth1") == 0 && (tl->list[i].arity == 3 || tl->list[i].arity == 4))  ||
+            (strcmp(tl->list[i].functor,"add") == 0 && tl->list[i].arity == 3) ||
+            (strcmp(tl->list[i].functor,"mul") == 0 && tl->list[i].arity == 3) ||
+            (strcmp(tl->list[i].functor,"sub") == 0 && tl->list[i].arity == 3) ||
+            (strcmp(tl->list[i].functor,"div") == 0 && tl->list[i].arity == 3) ||
+            (strcmp(tl->list[i].functor,"replace") == 0 && tl->list[i].arity == 4) || 
+            (strcmp(tl->list[i].functor,"member") == 0 && tl->list[i].arity == 2) 
             ) {
-            return SUCCESS;
+        }
+        else {
+            return FAILURE;
         }
     }
+
+    return SUCCESS;
 }
 
 int reference_already_present(reference_list* r_l, char* name) {
@@ -213,6 +232,7 @@ void add_subterm(term_list* tl, char* name) {
 int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *rl) {
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
+    int n_par = 0;
 
     assert(*index_str <= (int) strlen(str));
 
@@ -261,12 +281,6 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
             }
             var_name[var_pos] = '\0';
 
-            /*
-            if (str[*index_str] != ',' && str[*index_str] != ')') {
-                print_parser_error(str, *index_str, "Expected , or ) after a number");
-            }
-            */
-
             add_subterm(tl, var_name);
         }
         else if (str[*index_str] == '"') {
@@ -277,15 +291,12 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
                 var_pos++;
                 (*index_str)++;
             }
+            if(str[*index_str] == '\0') {
+                print_missing_quote();
+            }
             var_name[var_pos] = '\0';
             add_subterm(tl, var_name);
         }
-        /*
-        else {
-            snprintf(var_name, VAR_NAME_LEN, "Unrecognized char: %c\n", str[*index_str]);
-            print_parser_error(str, *index_str, var_name);
-        }
-        */
 
         // TODO: all the error stuff
         if (str[*index_str] == ',') {
@@ -295,9 +306,11 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         }
         else if (str[*index_str] == '(') {
             (*index_str)++;
+            n_par++;
         }
         else if (str[*index_str] == ')') {
             (*index_str)++;
+            n_par--;
         }
         else if (str[*index_str] == ' ') {
             (*index_str)++;
@@ -308,7 +321,15 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
         }
     }
 
-    return 0;
+    if(n_par != 0) {
+        print_unbalanced_parentheses_error(str);
+    }
+
+    if(tl->n_elements == 0) {
+        return FAILURE;
+    }
+
+    return SUCCESS;
 }
 
 void parse_command(char* command_string, term_list* tl, reference_list* rl) {
@@ -317,7 +338,8 @@ void parse_command(char* command_string, term_list* tl, reference_list* rl) {
 	parse_command_rec(command_string, &index_str,tl,rl);
     // print_reference_list(rl);
     // print_term_list(tl);
-    // check_arity(tl);
+    check_arity(tl);
+    // exit(-10);
     check_singleton(rl);
 
 }

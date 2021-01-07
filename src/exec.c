@@ -67,7 +67,7 @@ char* str_replace(char* source, char* find, char* replace) {
 
 	// count the number of replacements needed
 	ins = source;
-	for (count = 0; tmp = strstr(ins, replace); ++count) {
+	for (count = 0; (tmp = strstr(ins, replace)); ++count) {
 		ins = tmp + len_rep;
 	}
 
@@ -238,7 +238,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 	if (strcmp(t->functor, "length") == 0) {
 		if (isdigit(t->argument_list[1][0])) {
 			// lenght(L,2)
-			if (atoi(t->argument_list[1]) == l->len) {
+			if ((size_t)atoi(t->argument_list[1]) == l->len) {
 				return SUCCESS;
 			}
 			else {
@@ -345,13 +345,13 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			ch = t->argument_list[1][0];
 		}
 
-		for (j = 0; j < strlen(rl->list[i].cont.list); j++) {
+		for (j = 0; j < (int)strlen(rl->list[i].cont.list); j++) {
 			if (rl->list[i].cont.list[j] == ch) {
-				if (j != strlen(rl->list[i].cont.list) - 1) {
+				if (j != (int)strlen(rl->list[i].cont.list) - 1) {
 					count++;
 				}
 			}
-			while (rl->list[i].cont.list[j] == ch && j < strlen(rl->list[i].cont.list)) {
+			while (rl->list[i].cont.list[j] == ch && j < (int)strlen(rl->list[i].cont.list)) {
 				j++;
 			}
 		}
@@ -373,7 +373,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 
 		if (strlen(t->argument_list[1]) == 1) {
 			// single char
-			for (j = 0; j < strlen(rl->list[i].cont.list); j++) {
+			for (j = 0; j < (int)strlen(rl->list[i].cont.list); j++) {
 				if (rl->list[i].cont.list[j] == t->argument_list[1][0]) {
 					count++;
 				}
@@ -416,7 +416,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		i = find_matching_index(rl, t->argument_list[0]);
 		if (rl->list[i].t == LIST) {
 			tmp = malloc(strlen(rl->list[i].cont.list) + 2);
-			for (j = strlen(rl->list[i].cont.list); j > 0; j--) {
+			for (j = (int)strlen(rl->list[i].cont.list); j > 0; j--) {
 				tmp[strlen(rl->list[i].cont.list) - j] = rl->list[i].cont.list[j - 1];
 			}
 			tmp[strlen(rl->list[i].cont.list)] = '\0';
@@ -532,7 +532,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 					return FAILURE;
 				}
 				tmp = malloc(strlen(t->argument_list[2]) - j + 2);
-				for (i = 0; i < strlen(t->argument_list[2]) - j; i++) {
+				for (i = 0; i < (int)strlen(t->argument_list[2]) - j; i++) {
 					tmp[i] = t->argument_list[2][j + i];
 				}
 				tmp[i] = '\0';
@@ -707,6 +707,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		printf("Predicate not found\n");
 		exit(PREDICATE_NOT_FOUND);
 	}
+
+	return FAILURE;
 }
 
 double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream) {

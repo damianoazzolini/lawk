@@ -30,3 +30,4 @@
 #define NTH_ERROR -21
 #define TERM_NOT_FOUND -22
 #define COMMAND_ERROR -22
+#define MISSING_QUOTE -23
