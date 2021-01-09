@@ -32,13 +32,16 @@ const char *program_version = "0.0.1";
 char *filename = NULL;
 int interactive = 0;
 char *query = NULL;
-int verbose = 1;
+int verbose = 0;
+
+const char *query_usage = "Usage: lawk <file> [arguments]"; 
 
 void print_help() {
 	printf("lawk version %s\n", program_version);
 	printf("Analizing files with a logic-like language\n");
 	printf("Repository: https://github.com/damianoazzolini/lawk\n");
-	printf("Examples:\n");
+	printf("%s\n",query_usage);
+	printf("Query examples:\n");
 	printf("- Print the first line: `line(1,L), write(L)`\n");
 	printf("- Count the occurrences of a char in a line: `line(L),occurrences(L,\"c\",N),write(N)`\n");
 	printf("- Count the words of all lines, where words are separated by a space: `line(L),words(L,N),write(N)`\n");
@@ -56,6 +59,7 @@ void parse_arguments(int argc, char** argv) {
 		if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query") == 0) {
 			if (i == argc - 1) {
 				printf("Expected query");
+				printf("%s\n",query_usage);
 				exit(MISSING_QUERY);
 			}
 			else {
@@ -69,6 +73,9 @@ void parse_arguments(int argc, char** argv) {
 		}
 		else if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--interactive") == 0) {
 			interactive = 1;
+		}
+		else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
+			verbose = 1;
 		}
 		else {
 			filename = argv[i];
@@ -131,8 +138,12 @@ char *read_command() {
 	char *command = malloc(256);
 	// size_t n;
 	printf("?- ");
-	fgets(command, 256, stdin);
-	command[strlen(command) - 1] = '\0';
+	if(fgets(command, 256, stdin) == NULL) {
+		command = NULL;
+	}
+	else {
+		command[strlen(command) - 1] = '\0';
+	}
 	return command;
 }
 
@@ -160,6 +171,7 @@ int main(int argc, char **argv) {
 		// printf("Insert filename: ");
 		// scanf("%s",filename);
 		printf("Missing filename\n");
+		printf("%s\n",query_usage);
 		exit(MISSING_FILENAME);
 	}
 
@@ -170,7 +182,7 @@ int main(int argc, char **argv) {
 
 	// printf("home: %s\n",homedir);
 
-	printf("Query: %s\n",query);
+	// printf("Query: %s\n",query);
 
 	// printf("filename: %s\n",filename);
 	fp = open_file(filename);
