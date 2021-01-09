@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -5,13 +7,19 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+/*
 #ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
+*/
 // #include <sys/io.h>
 // #include <sys/mman.h>
+
+#include <unistd.h>
+// #include <sys/types.h>
+#include <pwd.h>
 
 
 #include "defines.h"
@@ -19,13 +27,15 @@
 #include "exec.h"
 
 const char *program_version = "0.0.1";
-char* filename = NULL;
+const char *history_file = ".lawk_history"; 
+// TODO: create a struct with global variables
+char *filename = NULL;
 int interactive = 0;
 char *query = NULL;
 
 void print_help() {
 	printf("lawk version %s\n", program_version);
-	printf("Analizing files with a logic-like langage\n");
+	printf("Analizing files with a logic-like language\n");
 	printf("Repository: https://github.com/damianoazzolini/lawk\n");
 	printf("Examples:\n");
 	printf("- Print the first line: `line(1,L), write(L)`\n");
@@ -71,7 +81,7 @@ FILE *open_file(const char *file) {
 
 	fp = fopen(file,"r");
 	if(fp == NULL) {
-		// TODO: ask another name, maybe look in the folder to find something
+		printf("File %s not found\n",file);
 		exit(FILE_NOT_FOUND);
 	}
 
@@ -122,6 +132,7 @@ char *read_command() {
 	// size_t n;
 	printf("?- ");
 	fgets(command, 256, stdin);
+	command[strlen(command) - 1] = '\0';
 	return command;
 }
 
@@ -132,6 +143,7 @@ int main(int argc, char **argv) {
 	term_list t_list;
 	FILE* fp, *outstream;
 	char *command_in;
+	const char *homedir;
 
 	double exec_time = 0.0;
 
@@ -144,42 +156,56 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 
 	if (filename == NULL) {
+		// filename = malloc(256);
+		// printf("Insert filename: ");
+		// scanf("%s",filename);
 		printf("Missing filename\n");
 		exit(MISSING_FILENAME);
 	}
 
-	printf("filename: %s\n",filename);
+	// TODO: store command history
+	// if ((homedir = getenv("HOME")) == NULL) {
+    // 	homedir = getpwuid(getuid())->pw_dir;
+	// }
+
+	// printf("home: %s\n",homedir);
+
+	// printf("filename: %s\n",filename);
 	fp = open_file(filename);
 
 	
 	command_in = read_command();
-	if(command_in != NULL) {
+	while(command_in != NULL && strcmp(command_in,"halt") != 0 && strcmp(command_in,"quit") != 0 && strcmp(command_in,"exit") != 0 ) {
 		// char *command_in = "line(I,L),write(L)";
 
-		// printf("Command: %s\n", command_in);
+		printf("Command: %s\n", command_in);
+		if(strcmp(command_in,"help") == 0) {
+			print_help();
+		}
+		else if (strcmp(command_in,"nl") == 0) {
+			printf("\n");
+		}
+		else {
+			parse_command(command_in, &t_list, &ref_list);
+
+			outstream = stdout;
+			
+			exec_time = exec_command(fp, &t_list, &ref_list, outstream);
+
+			printf("Executed in %lfs\n", exec_time < 0 ? 0 : exec_time);
+
+			free_reference_list(&ref_list);
+			free_term_list(&t_list);
+		}
 		
-		parse_command(command_in, &t_list, &ref_list);
-
-
-		outstream = stdout;
-		
-		exec_time = exec_command(fp, &t_list, &ref_list, outstream);
-
-		fclose(fp);
-
-		// free(command_in);
-
-		printf("Executed in %lfs\n", exec_time < 0 ? 0 : exec_time);
-
-		free_reference_list(&ref_list);
-		// free_term_list(&t_list);
-
-		// free(command);
-		return SUCCESS;
+		free(command_in);
+		command_in = NULL;
+		command_in = read_command();		
 	}
-	else {
-		printf("Command null\n");
-		return FAILURE;
-	}
-	
+
+	fclose(fp);
+	free(command_in);
+	free(filename);
+	printf("Bye\n");
+	return SUCCESS;
 }
