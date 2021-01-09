@@ -70,8 +70,7 @@ void parse_arguments(int argc, char** argv) {
 			interactive = 1;
 		}
 		else {
-			filename = malloc(strlen(argv[i]) + 2);
-			snprintf(filename, strlen(argv[i]) + 1, "%s", argv[i]);
+			filename = argv[i];
 		}
 	}
 }
@@ -205,7 +204,6 @@ int main(int argc, char **argv) {
 
 	fclose(fp);
 	free(command_in);
-	free(filename);
 	printf("Bye\n");
 	return SUCCESS;
 }
