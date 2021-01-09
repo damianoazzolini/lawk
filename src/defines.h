@@ -31,3 +31,4 @@
 #define TERM_NOT_FOUND -22
 #define COMMAND_ERROR -22
 #define MISSING_QUOTE -23
+#define CHECK_ARITY_ERROR -24

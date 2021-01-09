@@ -1,12 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+// #include <assert.h>
+// #include <fcntl.h>
+// #include <sys/types.h>
+// #include <sys/stat.h>
 /*
 #ifdef _WIN32
 #include <io.h>
@@ -16,25 +16,30 @@
 */
 // #include <sys/io.h>
 // #include <sys/mman.h>
-
-#include <unistd.h>
-// #include <sys/types.h>
-#include <pwd.h>
-
+// #include <unistd.h>
+// #include <pwd.h>
 
 #include "defines.h"
 #include "parser.h"
 #include "exec.h"
 
 const char *program_version = "0.0.1";
-// const char *history_file = ".lawk_history"; 
-// TODO: create a struct with global variables
-char *filename = NULL;
-int interactive = 0;
-char *query = NULL;
-int verbose = 0;
-
 const char *query_usage = "Usage: lawk <file> [arguments]"; 
+// const char *history_file = ".lawk_history"; 
+
+typedef struct command_line_arguments {
+	char *filename;
+	char *query;
+	int interactive;
+	int verbose;
+} command_line_arguments;
+
+void init_command_line_arguments(command_line_arguments *cla) {
+	cla->filename = NULL;
+	cla->query = NULL;
+	cla->interactive = 0;
+	cla->verbose = 0;
+}
 
 void print_help() {
 	printf("lawk version %s\n", program_version);
@@ -50,10 +55,9 @@ void print_help() {
 }
 
 // --help -h
-// --interactive -i
+// --interactive -i (unused)
 // --query -q
-// lawq <file> [arguments]
-void parse_arguments(int argc, char** argv) {
+void parse_arguments(int argc, char** argv, command_line_arguments *cla) {
 	int i;
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--query") == 0) {
@@ -63,7 +67,7 @@ void parse_arguments(int argc, char** argv) {
 				exit(MISSING_QUERY);
 			}
 			else {
-				query = argv[i + 1];
+				cla->query = argv[i + 1];
 				i++;
 			}
 		}
@@ -72,13 +76,13 @@ void parse_arguments(int argc, char** argv) {
 			exit(PRINT_HELP);
 		}
 		else if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--interactive") == 0) {
-			interactive = 1;
+			cla->interactive = 1;
 		}
 		else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
-			verbose = 1;
+			cla->verbose = 1;
 		}
 		else {
-			filename = argv[i];
+			cla->filename = argv[i];
 		}
 	}
 }
@@ -124,10 +128,10 @@ char *read_command() {
 	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
 	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
 	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
-	// char* command = "line(L),replace(L,\"a\",\"b\",R),write(R)"; // OK
 
 
 	// ---- NOT OK
+	// char* command = "line(L),replace(L,\"a\",\"b\",R),write(R)"; // OK
 	// char* command = "line(I,L),nth1(L,2,\"45\"),write(I)"; 
 	// char* command = "line(I,L),nth1(L,2,45),write(I)";
 	// char* command = "line(L),member(L,\"abc\"),write(L)";
@@ -148,15 +152,16 @@ char *read_command() {
 }
 
 // TODO: store history of the commands
-
 int main(int argc, char **argv) {
+	command_line_arguments cla;
     reference_list ref_list;
 	term_list t_list;
 	FILE* fp, *outstream;
 	char *command_in;
+	double exec_time = 0.0;
 	// const char *homedir;
 
-	double exec_time = 0.0;
+	init_command_line_arguments(&cla);
 
 	ref_list.list = NULL;
 	ref_list.n_elements = 0;
@@ -164,9 +169,9 @@ int main(int argc, char **argv) {
 	t_list.n_elements = 0;
 	t_list.list = NULL;
 
-	parse_arguments(argc, argv);
+	parse_arguments(argc, argv, &cla);
 
-	if (filename == NULL) {
+	if (cla.filename == NULL) {
 		// filename = malloc(256);
 		// printf("Insert filename: ");
 		// scanf("%s",filename);
@@ -185,20 +190,18 @@ int main(int argc, char **argv) {
 	// printf("Query: %s\n",query);
 
 	// printf("filename: %s\n",filename);
-	fp = open_file(filename);
+	fp = open_file(cla.filename);
 
 	
-	if(query == NULL) {
+	if(cla.query == NULL) {
 		command_in = read_command();
 	}
 	else {
-		command_in = query;
+		command_in = cla.query;
 	}
 		
 	while(command_in != NULL && strcmp(command_in,"halt") != 0 && strcmp(command_in,"quit") != 0 && strcmp(command_in,"exit") != 0 ) {
-		// char *command_in = "line(I,L),write(L)";
-
-		printf("Command: %s\n", command_in);
+		// printf("Command: %s\n", command_in);
 		if(strcmp(command_in,"help") == 0) {
 			print_help();
 		}
@@ -212,7 +215,7 @@ int main(int argc, char **argv) {
 			
 			exec_time = exec_command(fp, &t_list, &ref_list, outstream);
 
-			if(verbose == 1) {
+			if(cla.verbose == 1) {
 				printf("Executed in %lfs\n", exec_time < 0 ? 0 : exec_time);
 			}
 
@@ -220,7 +223,7 @@ int main(int argc, char **argv) {
 			free_term_list(&t_list);
 		}
 		
-		if(command_in == query) {
+		if(command_in == cla.query) {
 			command_in = NULL;
 			break;
 		}
@@ -235,7 +238,7 @@ int main(int argc, char **argv) {
 	if(command_in != NULL) {
 		free(command_in);
 	}
-	if(query == NULL) {
+	if(cla.query == NULL) {
 		printf("Bye\n");
 	}
 

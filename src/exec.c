@@ -920,7 +920,7 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 
 	}
 	else {
-		printf("Expected a line\n");
+		printf("Expected line1/2\n");
 	}
 	
 	end = clock();
