@@ -27,7 +27,7 @@ int check_arity(term_list* tl) {
     for (i = 0; i < tl->n_elements; i++) {
         if (
             (strcmp(tl->list[i].functor,"line") == 0 && (tl->list[i].arity == 1 || tl->list[i].arity == 2)) ||
-            (strcmp(tl->list[i].functor,"write") == 0) ||
+            (strcmp(tl->list[i].functor,"write") == 0 && tl->list[i].arity > 0) ||
             (strcmp(tl->list[i].functor,"even") == 0 && tl->list[i].arity == 2) ||
             (strcmp(tl->list[i].functor,"odd") == 0 && tl->list[i].arity == 2) ||
             (strcmp(tl->list[i].functor,"number") == 0 && tl->list[i].arity == 1)||
@@ -225,10 +225,12 @@ void parse_command(char* command_string, term_list* tl, reference_list* rl) {
 	parse_command_rec(command_string, &index_str,tl,rl);
     // print_reference_list(rl);
     // print_term_list(tl);
-    check_arity(tl);
-    // exit(-10);
-    check_singleton(rl);
+    if(check_arity(tl) == FAILURE) {
+        printf("Some predicates have wrong arity\n");
+        exit(CHECK_ARITY_ERROR);
+    }
 
+    check_singleton(rl);
 }
 
 
