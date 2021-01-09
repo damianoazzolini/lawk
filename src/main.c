@@ -27,11 +27,12 @@
 #include "exec.h"
 
 const char *program_version = "0.0.1";
-const char *history_file = ".lawk_history"; 
+// const char *history_file = ".lawk_history"; 
 // TODO: create a struct with global variables
 char *filename = NULL;
 int interactive = 0;
 char *query = NULL;
+int verbose = 1;
 
 void print_help() {
 	printf("lawk version %s\n", program_version);
@@ -39,7 +40,7 @@ void print_help() {
 	printf("Repository: https://github.com/damianoazzolini/lawk\n");
 	printf("Examples:\n");
 	printf("- Print the first line: `line(1,L), write(L)`\n");
-	printf("- - Count the occurrences of a char in a line: `line(L),occurrences(L,\"c\",N),write(N)`\n");
+	printf("- Count the occurrences of a char in a line: `line(L),occurrences(L,\"c\",N),write(N)`\n");
 	printf("- Count the words of all lines, where words are separated by a space: `line(L),words(L,N),write(N)`\n");
 	printf("For a full list of examples, see: https://github.com/damianoazzolini/lawk/README.md\n");
 	printf("Report bugs as GitHub issues\n");
@@ -58,8 +59,8 @@ void parse_arguments(int argc, char** argv) {
 				exit(MISSING_QUERY);
 			}
 			else {
-				query = malloc(strlen(argv[i]) + 2);
-				snprintf(query, strlen(argv[i]) + 1, "%s", argv[i]);
+				query = argv[i + 1];
+				i++;
 			}
 		}
 		else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -142,7 +143,7 @@ int main(int argc, char **argv) {
 	term_list t_list;
 	FILE* fp, *outstream;
 	char *command_in;
-	const char *homedir;
+	// const char *homedir;
 
 	double exec_time = 0.0;
 
@@ -169,11 +170,19 @@ int main(int argc, char **argv) {
 
 	// printf("home: %s\n",homedir);
 
+	printf("Query: %s\n",query);
+
 	// printf("filename: %s\n",filename);
 	fp = open_file(filename);
 
 	
-	command_in = read_command();
+	if(query == NULL) {
+		command_in = read_command();
+	}
+	else {
+		command_in = query;
+	}
+		
 	while(command_in != NULL && strcmp(command_in,"halt") != 0 && strcmp(command_in,"quit") != 0 && strcmp(command_in,"exit") != 0 ) {
 		// char *command_in = "line(I,L),write(L)";
 
@@ -191,19 +200,32 @@ int main(int argc, char **argv) {
 			
 			exec_time = exec_command(fp, &t_list, &ref_list, outstream);
 
-			printf("Executed in %lfs\n", exec_time < 0 ? 0 : exec_time);
+			if(verbose == 1) {
+				printf("Executed in %lfs\n", exec_time < 0 ? 0 : exec_time);
+			}
 
 			free_reference_list(&ref_list);
 			free_term_list(&t_list);
 		}
 		
-		free(command_in);
-		command_in = NULL;
-		command_in = read_command();		
+		if(command_in == query) {
+			command_in = NULL;
+			break;
+		}
+		else {
+			free(command_in);
+			command_in = NULL;
+			command_in = read_command();
+		}
 	}
 
 	fclose(fp);
-	free(command_in);
-	printf("Bye\n");
+	if(command_in != NULL) {
+		free(command_in);
+	}
+	if(query == NULL) {
+		printf("Bye\n");
+	}
+
 	return SUCCESS;
 }
