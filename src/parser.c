@@ -295,7 +295,7 @@ void free_term_t(term_t* t) {
     int i;
     
     for (i = 0; i < t->arity; i++) {
-        free(&t->argument_list[i]);
+        free(t->argument_list[i]);
     }
     
     free(t->argument_list);
