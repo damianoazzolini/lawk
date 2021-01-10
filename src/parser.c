@@ -116,12 +116,17 @@ void add_subterm(term_list* tl, char* name) {
 }
 
 // TODO: handle floating point numbers (.)
+// TODO: remove *index_str and use a local variable
 int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *rl) {
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
     int n_par = 0;
 
-    assert(*index_str <= (int) strlen(str));
+    // i think this is not a definitive solution
+    if (str[*index_str] == '\"') {
+        printf("Unexpected quote\n");
+        exit(COMMAND_ERROR);
+    }
 
     while (str[*index_str] != '\0') {
         var_pos = 0;
