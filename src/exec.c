@@ -301,7 +301,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			if (
 				(rl->list[i].cont.int_val < atoi(t->argument_list[1]) && strcmp(t->functor, "lt") == 0) ||
 				(rl->list[i].cont.int_val > atoi(t->argument_list[1]) && strcmp(t->functor, "gt") == 0) ||
-				(strcmp(t->functor, "between") == 0) && (rl->list[i].cont.int_val > atoi(t->argument_list[1])) && (rl->list[i].cont.int_val < atoi(t->argument_list[2]))
+				((strcmp(t->functor, "between") == 0) && (rl->list[i].cont.int_val > atoi(t->argument_list[1])) && (rl->list[i].cont.int_val < atoi(t->argument_list[2])))
 				) {
 				// printf("%d\n", rl->list[i].cont.int_val);
 				return SUCCESS;
@@ -382,7 +382,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		else {
 			// string
 			tmp = rl->list[i].cont.list;
-			while (tmp = strstr(tmp, t->argument_list[1])) {
+			while ((tmp = strstr(tmp, t->argument_list[1]))) {
 				count++;
 				tmp++;
 			}			
@@ -413,6 +413,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 	}
 	else if (strcmp(t->functor, "reverse") == 0) {
 		// reverse(Line,Sorted)
+		// TODO: Sorted ground
 		i = find_matching_index(rl, t->argument_list[0]);
 		if (rl->list[i].t == LIST) {
 			tmp = malloc(strlen(rl->list[i].cont.list) + 2);
@@ -548,13 +549,22 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		}
 
 	}
-	else if (strcmp(t->functor, "nth1") == 0) {
+	else if(strcmp(t->functor, "first") == 0) {
+
+	}
+	else if(strcmp(t->functor, "last") == 0) {
+		// merge with the previous?
+	}
+	else if(strcmp(t->functor, "nth1") == 0) {
+
+	}
+	else if (strcmp(t->functor, "nth1_word") == 0) {
 		// nth1(L,2,E) -> E is the second element
 		// nth1(L,2,"abc") -> true when abc is the second element
 		i = find_matching_index(rl, t->argument_list[0]);
 		// strsep
 		
-		if (t->arity == 3 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) || t->arity == 4 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[3][0]))) {
+		if ((t->arity == 3 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[2][0]))) || (t->arity == 4 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[3][0])))) {
 			// nth1(L, 2, E)->E is the second element
 			// TODO: does not work with number
 			count = 0;
@@ -589,7 +599,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				exit(NTH_ERROR);
 			}
 		}
-		else if (t->arity == 3 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[2][0])) || t->arity == 4 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[3][0]))) {
+		else if ((t->arity == 3 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[2][0]))) || (t->arity == 4 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[3][0])))) {
 			// nth1(L,2,"abc") 
 			count = 0;
 			start = 0; 
