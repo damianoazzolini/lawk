@@ -176,6 +176,7 @@ char *read_command() {
 	char *command = malloc(256);
 	// size_t n;
 	printf("?- ");
+	// fgets cannot manage arrow keys
 	if(fgets(command, 256, stdin) == NULL) {
 		command = NULL;
 	}
@@ -269,6 +270,8 @@ int main(int argc, char **argv) {
 			command_in = NULL;
 			command_in = read_command();
 		}
+
+		rewind(fp);
 	}
 
 	fclose(fp);

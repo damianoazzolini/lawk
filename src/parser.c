@@ -43,7 +43,8 @@ int check_arity(term_list* tl) {
             (strcmp(tl->list[i].functor,"endswith") == 0 && tl->list[i].arity == 2) ||
             (strcmp(tl->list[i].functor,"reverse") == 0 && tl->list[i].arity == 2) ||
             (strcmp(tl->list[i].functor,"words") == 0 && (tl->list[i].arity == 2 || tl->list[i].arity == 3)) ||
-            (strcmp(tl->list[i].functor,"nth1") == 0 && (tl->list[i].arity == 3 || tl->list[i].arity == 4))  ||
+            (strcmp(tl->list[i].functor,"nth1_word") == 0 && (tl->list[i].arity == 3 || tl->list[i].arity == 4))  ||
+            (strcmp(tl->list[i].functor,"nth1") == 0 && tl->list[i].arity == 3 )  ||
             (strcmp(tl->list[i].functor,"add") == 0 && tl->list[i].arity == 3) ||
             (strcmp(tl->list[i].functor,"mul") == 0 && tl->list[i].arity == 3) ||
             (strcmp(tl->list[i].functor,"sub") == 0 && tl->list[i].arity == 3) ||
@@ -306,7 +307,10 @@ void free_term_t(term_t* t) {
     }
     
     free(t->argument_list);
+    t->argument_list = NULL;
     free(t->functor);
+    t->functor = NULL;
+    t->arity = 0;
 }
 
 void free_term_list(term_list* t) {
@@ -317,10 +321,16 @@ void free_term_list(term_list* t) {
     }
 
     free(t->list);
+
+    t->list = NULL;
+    t->n_elements = 0;
 }
 
 void free_ref_t(ref_t *t) {
     free(t->name);
+    t->name = NULL;
+    t->reference_count = 0;
+    t->to_free = 0;
     /*
     if (t->t == LIST) {
         free(t->cont.list);
@@ -334,4 +344,7 @@ void free_reference_list(reference_list* rl) {
         free_ref_t(&rl->list[i]);
     }
     free(rl->list);
+
+    rl->list = NULL;
+    rl->n_elements = 0;
 }

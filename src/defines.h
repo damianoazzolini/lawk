@@ -32,3 +32,4 @@
 #define COMMAND_ERROR -22
 #define MISSING_QUOTE -23
 #define CHECK_ARITY_ERROR -24
+#define OUT_OF_RANGE -25

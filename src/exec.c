@@ -498,13 +498,13 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				tmp = malloc(strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 2);
 				snprintf(tmp, strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 1, "%s%s", rl->list[i].cont.list, t->argument_list[1]);
 				if (strcmp(tmp, t->argument_list[2]) == 0) {
-					printf("true\n");
+					// printf("true\n");
 					free(tmp);
 					tmp = NULL;
 					return SUCCESS;
 				}
 				else {
-					printf("false\n");
+					// printf("false\n");
 					free(tmp);
 					tmp = NULL;
 					return FAILURE;
@@ -513,7 +513,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			else if (isupper(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
 				// append(L,M,labc) -> find what is missing to have labc starting from L
 				if (strlen(rl->list[i].cont.list) > strlen(t->argument_list[2])) {
-					printf("false\n");
+					// printf("false\n");
 					return FAILURE;
 				}
 				if (strcmp(rl->list[i].cont.list,t->argument_list[2]) == 0) {
@@ -529,7 +529,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				// if we do not terminate the input string then they cannot be equal
 				// in anyway
 				if (rl->list[i].cont.list[j] != '\0') {
-					printf("false\n");
+					// printf("false\n");
 					return FAILURE;
 				}
 				tmp = malloc(strlen(t->argument_list[2]) - j + 2);
@@ -549,14 +549,67 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		}
 
 	}
-	else if(strcmp(t->functor, "first") == 0) {
-
-	}
-	else if(strcmp(t->functor, "last") == 0) {
-		// merge with the previous?
+	else if(strcmp(t->functor, "first") == 0 || strcmp(t->functor, "last") == 0)  {
+		// last(L,N,V): V are the last N chars of L
+		// last(L,N,ground): ground are the last N chars of L -> success/failure
+		// last(L,ground,V): V are the last ground chars of L
+		// last(L,groundN,ground): ground are the last groundN chars of L
+		i = find_matching_index(rl, t->argument_list[0]);
+		if(isupper(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) {
+			// last(L,N,V): V are the last N chars of L
+		}
+		else if(isupper(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
+			// last(L,N,ground): ground are the last N chars of L -> success/failure
+		}
+		else if(islower(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) {
+			// last(L,ground,V): V are the last ground chars of L
+	
+		}
+		else if(islower(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
+			// last(L,groundN,ground): ground are the last groundN chars of L
+		}
+		else {
+			printf("%s error\n", strcmp(t->functor, "first") == 0 ? "first" : "last");
+			exit(COMMAND_ERROR);
+		}
 	}
 	else if(strcmp(t->functor, "nth1") == 0) {
-
+		// nth1(Line,Index,Char)
+		// nth1(Line,3,Char)
+		i = find_matching_index(rl, t->argument_list[0]);
+		if(isdigit(t->argument_list[1][0])) {
+			// nth1(Line,3,Char)
+			if(atoi(t->argument_list[1]) > (int)strlen(rl->list[i].cont.list)) {
+				printf("Unable to access index %d of line\n",atoi(t->argument_list[1]));
+				exit(OUT_OF_RANGE);
+			}
+			else {
+				tmp = malloc(2);
+				tmp[0] = rl->list[i].cont.list[atoi(t->argument_list[1])];
+				tmp[1] = '\0';
+				associate_str_copy(rl, t->argument_list[2], tmp);
+				free(tmp);
+				return SUCCESS;
+			}
+		}
+		else if(isupper(t->argument_list[1][0])) {
+			// nth1(Line,Index,Char)
+			j = find_matching_index(rl, t->argument_list[1]);
+				if(rl->list[j].t == INT) {
+					if(rl->list[j].cont.int_val > (int)strlen(rl->list[i].cont.list)) {
+					printf("Unable to access index %d of line\n",rl->list[j].cont.int_val);
+					exit(OUT_OF_RANGE);
+				}
+				else {
+					tmp = malloc(2);
+					tmp[0] = rl->list[i].cont.list[rl->list[j].cont.int_val];
+					tmp[1] = '\0';
+					associate_str_copy(rl, t->argument_list[2], tmp);
+					free(tmp);
+					return SUCCESS;
+				}
+			}
+		}
 	}
 	else if (strcmp(t->functor, "nth1_word") == 0) {
 		// nth1(L,2,E) -> E is the second element
