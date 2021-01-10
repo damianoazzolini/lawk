@@ -58,15 +58,18 @@ nth1/4 index list element separator character
 - Append a string to a line: `line(I,L), append(L,"ciao",LO), write(LO)`. append(L,M,labc) -> find what is missing to have labc starting from L, append(L,"abc",labc) -> true / false, append(L, "abc", LO)->LO = Labc  
 - Print the index of the line that is equal to abc: `line(I,"abc"),write(I)`
 - Perform arithmetic operations: `line(I,L),add(I,2,V),mul(V,I,V2),write(V2)`
-- Find the nth element of a line: `line(L),nth1(L,2,V),write(V)`
-- Find the nth element of a line, where elements are separated by a certain character (`_` in this example): `line(L),nth1(L,2,"_",V),write(V)`
-- Replace all the occurrences of a string with another: `line(L),replace(L,\"a\",\"b\",R),write(R)`
+- Find the nth character of a line: `line(L),nth1(L,2,V),write(V)`
+- Find the nth word of a line: `line(L),nth1_word(L,2,V),write(V)`
+- Find the nth word of a line, where elements are separated by a certain character (`_` in this example): `line(L),nth1_word(L,2,"_",V),write(V)`
+
 Priority
+- Replace all the occurrences of a string with another: `line(L),replace(L,\"a\",\"b\",R),write(R)`
+- Find first/last 10 chars: `line(L),first(L,10,R),write(R)` similarly with `last/2`
+
+Queue
 - Find all the lines that contain at least one number: `line(L),member(L,N),number(N), write(L)`
 - Find all the lines that contain at least one number greater than 3: `line(L),member(L,N),gt(N,3), write(L)`
 - Find and replace
-
-Queue
 - Find all the lines that contain a certain pattern (abc): `line(L),member(L,"abc"),write(L)`
 - Find all the lines that contain a certain pattern: `line(L),match(L,"*a"),write(L)`
 

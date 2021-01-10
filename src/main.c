@@ -26,6 +26,32 @@
 const char *program_version = "0.0.1";
 const char *query_usage = "Usage: lawk <file> [arguments]"; 
 // const char *history_file = ".lawk_history"; 
+const char *predicates_list[] = {
+	"line/1,2: line",
+	"write/n: print the content of the variable(s)",
+	"length(L,N): N is length of L",
+	"even(I): checks if I is even",
+	"odd(I): checks if I is odd",
+	"mod(A,B,C): C = A mod B",
+	"gt(A,B): true if A > B",
+	"between(A,B,C): true if A is between B and C",
+	"lt(A,B): true if A < B",
+	"occurrences(A,B,C): count the occurrences of B in A and save in C",
+	"startswith(A,B): true if A starts with B",
+	"endswith(A,B): true if A ends with B",
+	"words(A,B): B is the number of words in A (separated by space)",
+	"words(A,B,C): C is the number of words in A (separated by B)",
+	"reverse(A,B): true B is A reversed",
+	"append(A,B,C): C is B appended to A, C can be ground",
+	"add(A,B,C): C is A + B",
+	"mul(A,B,C): C is A * B",
+	"sub(A,B,C): C is A - B",
+	"div(A,B,C): C is A \\ B",
+	"nth1(A,B,C): C is the B-nth char of A counting from 1, C can be ground",
+	"nth1_word(A,B,C): C is the nth word of A, B can be ground",
+	"nth1_word(A,B,C,D): D is the nth word of A, where words are separated by char C, D can be ground",
+	"replace(A,B,C,D): D is A where char B is replaced by char C"
+}; 
 
 typedef struct command_line_arguments {
 	char *filename;
@@ -52,6 +78,14 @@ void print_help() {
 	printf("- Count the words of all lines, where words are separated by a space: `line(L),words(L,N),write(N)`\n");
 	printf("For a full list of examples, see: https://github.com/damianoazzolini/lawk/README.md\n");
 	printf("Report bugs as GitHub issues\n");
+}
+
+void print_detail_predicates() {
+	int i;
+	int n_predicates = 24;
+	for(i = 0; i < n_predicates; i++) {
+		printf("%s\n",predicates_list[i]);
+	}
 }
 
 // --help -h
@@ -207,6 +241,9 @@ int main(int argc, char **argv) {
 		}
 		else if (strcmp(command_in,"nl") == 0) {
 			printf("\n");
+		}
+		else if (strcmp(command_in,"list") == 0) {
+			print_detail_predicates();
 		}
 		else {
 			parse_command(command_in, &t_list, &ref_list);
