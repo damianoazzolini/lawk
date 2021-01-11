@@ -1,22 +1,41 @@
 # lawk
 Perform operations on files, a la grep/awk ecc, but with a logic-like language.
 
-## Examples
-Variable are indicated with:
+## How to Build
+```
+cd src
+make
+```
+and then
+```
+./lawk <filename> [OPTIONS]
+```
+
+## Command Line Arguments
+- `-q --query`: specify a query (see examples below)
+- `-h --help`: print help
+- `-v --verbose`: verbose
+
+## How to Use
+By default, when called only with filename, it enters an interactive mode: you can specify a query and then ask it with return. After the query, you can ask another query and so on... To exit from the interactive mode, you have several options: `halt`, `exit`, or `quit`.
+In interactive mode, you can print the help with `help`. With `list` you get a list of available predicates.
+
+## Syntax
+Variables are denoted with:
 - `+` input variable
 - `-` output variable
 - `--` ground (constant)
 - `?` can be a combination of the three above
 
-- `line/1` - `line(?Line)` represents a file line
-- line/2 represents a file line and its line number (starting from 1): line(Number,Content)
-- write/n print the variable(s) with the specified format
-- length/2 - length(+Line,?Len) check the length of the line, true if the lenght of the line is equal to Len, which can also be an integer
-- even/1 - even(+Number) checks that the number is evem
-- odd/1 - odd(+Number) checks that the number is odd
-- mod/3 - mod(+Number,-Mod,-Res)
-- lt/2 less than (arithmetic <)
-- gt/2 greater than (arithmetic >)
+- `line/1` - `line(?Line)`: `Line` contains a file line
+- `line/2` - `line(?Line,?Number)`: `Line` represents a file line and `Number` its line number (counting from 1)
+- `write/n` prints the variable(s) with the specified format
+- `length/2` - `length(+Line,?Len)`: `Len` represents the length of the line, true if the length of the line is equal to `Len`
+- `even/1` - `even(+Number)`: true if `Number` is even
+- `odd/1` - `odd(+Number)`: true if `Number` is odd
+- `mod/3` - `mod(+Number,-Mod,-Res)`: `Res` is `Number` modulo `Mod`
+- `lt/2` - `lt(+NumberA,+NumberB)`: true if `NumberA` is less than `NumberB` (arithmetic <)
+- `gt/2` - `gt(+NumberA,+NumberB)`: true if `NumberA` is greater than `NumberB` (arithmetic >)
 - between/3
 - occurrences/3
 - startswith/2 line that starts with
@@ -37,7 +56,7 @@ match/2 apply pattern matching
 sumlist/2 sum of the list
 nth1/4 index list element separator character
 
-# Implemented Predicates
+# Implemented Predicates with Examples
 - Print the first line: `line(1,L), write(L)`
 - Print the length of line 1: `line(1,L), length(L,N), write(N)`
 - Print all the even positioned lines: `line(I,L),even(I), write(L)`
@@ -62,11 +81,11 @@ nth1/4 index list element separator character
 - Find the nth word of a line: `line(L),nth1_word(L,2,V),write(V)`
 - Find the nth word of a line, where elements are separated by a certain character (`_` in this example): `line(L),nth1_word(L,2,"_",V),write(V)`
 
-Priority
+Priority (still to implement)
 - Replace all the occurrences of a string with another: `line(L),replace(L,\"a\",\"b\",R),write(R)`
 - Find first/last 10 chars: `line(L),first(L,10,R),write(R)` similarly with `last/2`
 
-Queue
+Queue (still to implement)
 - Find all the lines that contain at least one number: `line(L),member(L,N),number(N), write(L)`
 - Find all the lines that contain at least one number greater than 3: `line(L),member(L,N),gt(N,3), write(L)`
 - Find and replace
@@ -97,5 +116,12 @@ oppure
 - ?- line(I,L), even(I).
 - Count the lines that satisfy a particular condition:  -->
 
-## Current limitations
+## Current Limitations (or Bugs)
 - all the predicates does not work when a string is expected but a number is found. For example: "line(I,L),nth1(L,2,\"45\"),write(I)" or "line(I,L),nth1(L,2,45),write(I)", 45 is treated as a number so it is not catched in the if. TODO: store the int in the list, so remove the union
+- a full test module is still missing (but is as fundamental as boring to write)
+
+## How to Contribute
+In the way you prefer: issues (also suggesting features) or pull requests
+
+## But Why?
+The idea for this software came from [this video](https://www.youtube.com/watch?v=kGQNeeRp4sM)
