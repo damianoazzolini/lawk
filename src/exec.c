@@ -166,7 +166,7 @@ int associate_str_copy(reference_list* rl, char* name, char* value) {
 	exit(TERM_NOT_FOUND);
 }
 
-// used to free the memory allocated in, for example
+// used to free the memory allocated in, for example,
 // reverse, nth ...
 void free_ref_t_to_free(reference_list* rl) {
 	int i;
@@ -413,7 +413,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 	}
 	else if (strcmp(t->functor, "reverse") == 0) {
 		// reverse(Line,Sorted)
-		// TODO: Sorted ground
+		// reverse(Line,sorted)
 		i = find_matching_index(rl, t->argument_list[0]);
 		if (rl->list[i].t == LIST) {
 			tmp = malloc(strlen(rl->list[i].cont.list) + 2);
@@ -421,10 +421,24 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				tmp[strlen(rl->list[i].cont.list) - j] = rl->list[i].cont.list[j - 1];
 			}
 			tmp[strlen(rl->list[i].cont.list)] = '\0';
-			associate_str_copy(rl, t->argument_list[1], tmp);
-			free(tmp);
-			tmp = NULL;
-			return SUCCESS;
+			if(isupper(t->argument_list[1][0])) {
+				// reverse(Line,Sorted)
+				associate_str_copy(rl, t->argument_list[1], tmp);
+				free(tmp);
+				tmp = NULL;
+				return SUCCESS;
+			}
+			else if(islower(t->argument_list[1][0])) {
+				// reverse(Line,sorted)
+				if(strcmp(tmp,t->argument_list[1]) == 0) {
+					free(tmp);
+					return SUCCESS;
+				}
+				else {
+					free(tmp);
+					return FAILURE;
+				}
+			}
 		}
 		else {
 			printf("Unable to reverse\n");
