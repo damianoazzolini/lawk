@@ -633,7 +633,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		
 		if ((t->arity == 3 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[2][0]))) || (t->arity == 4 && (isdigit(t->argument_list[1][0]) && isupper(t->argument_list[3][0])))) {
 			// nth1(L, 2, E)->E is the second element
-			// TODO: does not work with number
+			// TODO: does not work with numbers
 			count = 0;
 			start = 0; 
 			end = 0;
@@ -700,6 +700,38 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			}
 		}
 
+	}
+	else if (strcmp(t->functor, "swap") == 0) {
+		// swap(L,2,4,S)
+		i = find_matching_index(rl, t->argument_list[0]);
+		v1 = atoi(t->argument_list[1]) - 1;
+		v2 = atoi(t->argument_list[2]) - 1;
+		if((size_t)v1 > strlen(rl->list[i].cont.list) || (size_t)v2 > strlen(rl->list[i].cont.list) || v1 < 0 || v2 < 0) {
+			printf("Index out of string");
+			exit(OUT_OF_RANGE);
+		}
+		tmp = malloc(strlen(rl->list[i].cont.list) + 2);
+		snprintf(tmp,strlen(rl->list[i].cont.list) + 1 , "%s", rl->list[i].cont.list);
+		ch = tmp[v1];
+		tmp[v1] = tmp[v2];
+		tmp[v2] = ch;
+			
+		if(isupper(t->argument_list[3][0])) {
+			// swap(L,2,4,S)
+			associate_str_copy(rl,t->argument_list[3],tmp);
+			free(tmp);
+			return SUCCESS;
+		}
+		else {
+			// swap(L,2,4,ground): success or failure
+			if(strcmp(t->argument_list[3],tmp) == 0) {
+				return SUCCESS;
+			}
+			else {
+				return FAILURE;
+			}
+		}
+		
 	}
 	else if (strcmp(t->functor, "add") == 0 || strcmp(t->functor, "mul") == 0 || strcmp(t->functor, "sub") == 0 || strcmp(t->functor, "div") == 0) {
 		// add(L,2,3) -> true or false

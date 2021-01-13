@@ -50,7 +50,8 @@ int check_arity(term_list* tl) {
             (strcmp(tl->list[i].functor,"sub") == 0 && tl->list[i].arity == 3) ||
             (strcmp(tl->list[i].functor,"div") == 0 && tl->list[i].arity == 3) ||
             (strcmp(tl->list[i].functor,"replace") == 0 && tl->list[i].arity == 4) || 
-            (strcmp(tl->list[i].functor,"member") == 0 && tl->list[i].arity == 2) 
+            (strcmp(tl->list[i].functor,"member") == 0 && tl->list[i].arity == 2) ||
+            (strcmp(tl->list[i].functor,"swap") == 0 && tl->list[i].arity == 4) 
             ) {
         }
         else {
