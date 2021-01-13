@@ -6,23 +6,24 @@ CC=gcc
 
 COMPILE=${CC} ${CFLAGS} ${CFLAGSPEDANTIC} ${COMMONFLAGS}
 
+
 lawk: main.o parser.o error.o exec.o
 	${COMPILE} -o lawk main.o parser.o exec.o error.o -lc
 	
-main.o: main.c parser.h defines.h exec.h
-	${COMPILE} -c main.c
+main.o: src/main.c src/parser.h src/defines.h src/exec.h
+	${COMPILE} -c src/main.c
 
-parser.o: parser.c parser.h error.h defines.h
-	${COMPILE} -c parser.c
+parser.o: src/parser.c src/parser.h src/error.h src/defines.h
+	${COMPILE} -c src/parser.c
 
-exec.o: exec.c parser.h error.h defines.h
-	${COMPILE} -c exec.c
+exec.o: src/exec.c src/parser.h src/error.h src/defines.h
+	${COMPILE} -c src/exec.c
 
-error.o: error.c error.h
-	${COMPILE} -c error.c
+error.o: src/error.c src/error.h
+	${COMPILE} -c src/error.c
 
 clean:
-	rm lawk *.o
+	@rm lawk *.o
 
 # check:
 # 	@echo "tests"
