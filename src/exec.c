@@ -886,6 +886,7 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 						break;
 					}
 				}
+				free(l.content);
 
 				// check if something is to free in reference, flag to_free that indicates
 				// that the string has been mallocd instead of reference
@@ -980,6 +981,8 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 						printf("false\n");
 					}
 					
+					free(l.content);
+
 
 					// check if something is to free in reference, flag to_free that indicates
 					// that the string has been mallocd instead of reference
