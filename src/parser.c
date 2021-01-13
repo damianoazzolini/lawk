@@ -116,101 +116,110 @@ void add_subterm(term_list* tl, char* name) {
     snprintf(tl->list[tl->n_elements - 1].argument_list[tl->list[tl->n_elements - 1].arity - 1], strlen(name) + 1, "%s", name);
 }
 
-// TODO: handle floating point numbers (.)
-// TODO: remove *index_str and use a local variable
-int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *rl) {
+// TODO: remove index_str and use a local variable
+int parse_command_rec(char* str, term_list *tl, reference_list *rl) {
     char var_name[VAR_NAME_LEN];
     int var_pos = 0;
     int n_par = 0;
+    int index_str = 0;
 
     // i think this is not a definitive solution
-    if (str[*index_str] == '\"') {
+    if (str[index_str] == '\"') {
         printf("Unexpected quote\n");
         exit(COMMAND_ERROR);
     }
 
-    while (str[*index_str] != '\0') {
+    while (str[index_str] != '\0') {
         var_pos = 0;
-        var_name[var_pos] = str[*index_str];
+        var_name[var_pos] = str[index_str];
         var_pos++;
 
-        if (isupper(str[*index_str])) {
-            (*index_str)++;
-            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '\"' && str[*index_str] != '\0') {
-                var_name[var_pos] = str[*index_str];
+        if (isupper(str[index_str])) {
+            // fix it as below for lower
+            (index_str)++;
+            while ( (islower(str[index_str]) || isupper(str[index_str]) || isdigit(str[index_str]) ) && str[index_str] != '\"' && str[index_str] != '\0') {
+                var_name[var_pos] = str[index_str];
                 var_pos++;
-                (*index_str)++;
+                (index_str)++;
             }
             var_name[var_pos] = '\0';
-
+            if(str[index_str] != ',' && str[index_str] != ')' && str[index_str] != '(') {
+                print_parser_error(str,index_str, "Unexpected character");
+            }
             // here i have the variable name
             add_reference(rl,var_name);            
             // printf("%s\n", var_name);
             add_subterm(tl, var_name);
         }
-        else if (islower(str[*index_str])) {
+        else if (islower(str[index_str])) {
             // this is a constant or compound
-            (*index_str)++;
-            while (str[*index_str] != ',' && str[*index_str] != ')' && str[*index_str] != '(' && str[*index_str] != '\"' && str[*index_str] != '\0') {
-                var_name[var_pos] = str[*index_str];
+            // allow aB24
+            (index_str)++;
+            while ( (islower(str[index_str]) || isupper(str[index_str]) || isdigit(str[index_str]) ) && str[index_str] != '\"' && str[index_str] != '\0') {
+                var_name[var_pos] = str[index_str];
                 var_pos++;
-                (*index_str)++;
+                (index_str)++;
             }
             var_name[var_pos] = '\0';
+            if(str[index_str] != ',' && str[index_str] != ')' && str[index_str] != '(') {
+                print_parser_error(str,index_str, "Unexpected character");
+            }
 
-            if (str[*index_str] == ',' || str[*index_str] == ')') {
+            if (str[index_str] == ',' || str[index_str] == ')') {
                 add_subterm(tl, var_name);
             }
             else {
                 add_term_t(tl, var_name);
             }
         }
-        else if (isdigit(str[*index_str])) {
-            (*index_str)++;
-            while (isdigit(str[*index_str]) && str[*index_str] != '\0') {
-                var_name[var_pos] = str[*index_str];
+        else if (isdigit(str[index_str])) {
+            (index_str)++;
+            while ((isdigit(str[index_str]) || str[index_str] == '.')  && str[index_str] != '\0') {
+                var_name[var_pos] = str[index_str];
                 var_pos++;
-                (*index_str)++;
+                (index_str)++;
+            }
+            if(str[index_str] != ')' && str[index_str] != ',') {
+                print_parser_error(str,index_str, "Unexpected character");
             }
             var_name[var_pos] = '\0';
 
             add_subterm(tl, var_name);
         }
-        else if (str[*index_str] == '"') {
+        else if (str[index_str] == '"') {
             var_pos = 0;
-            (*index_str)++;
-            while (str[*index_str] != '"' && str[*index_str] != '\0') {
-                var_name[var_pos] = str[*index_str];
+            (index_str)++;
+            while (str[index_str] != '"' && str[index_str] != '\0') {
+                var_name[var_pos] = str[index_str];
                 var_pos++;
-                (*index_str)++;
+                (index_str)++;
             }
-            if(str[*index_str] == '\0') {
+            if(str[index_str] == '\0') {
                 print_missing_quote();
             }
             var_name[var_pos] = '\0';
             add_subterm(tl, var_name);
+            (index_str)++;
         }
 
-        // TODO: all the error stuff
-        if (str[*index_str] == ',') {
-            (*index_str)++; // digest ,
+        if (str[index_str] == ',' || str[index_str] == ' ') {
+            (index_str)++; // digest ,
             // term_pos++;
             // increase_arity(stack, *index_stack);
         }
-        else if (str[*index_str] == '(') {
-            (*index_str)++;
+        else if (str[index_str] == '(') {
+            (index_str)++;
             n_par++;
         }
-        else if (str[*index_str] == ')') {
-            (*index_str)++;
+        else if (str[index_str] == ')') {
+            (index_str)++;
             n_par--;
-        }
-        else if (str[*index_str] == ' ') {
-            (*index_str)++;
         }
         else {
             // fallback
-            (*index_str)++;
+            // should not happen
+            print_parser_error(str,index_str, "Unexpected character");
+            // (index_str)++;
         }
     }
 
@@ -226,9 +235,7 @@ int parse_command_rec(char* str, int* index_str, term_list *tl, reference_list *
 }
 
 void parse_command(char* command_string, term_list* tl, reference_list* rl) {
-	int index_str = 0;
-	// check if the string is well formed
-	parse_command_rec(command_string, &index_str,tl,rl);
+	parse_command_rec(command_string,tl,rl);
     // print_reference_list(rl);
     // print_term_list(tl);
     if(check_arity(tl) == FAILURE) {
