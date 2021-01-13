@@ -725,9 +725,11 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		else {
 			// swap(L,2,4,ground): success or failure
 			if(strcmp(t->argument_list[3],tmp) == 0) {
+				free(tmp);
 				return SUCCESS;
 			}
 			else {
+				free(tmp);
 				return FAILURE;
 			}
 		}
