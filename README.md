@@ -17,8 +17,16 @@ and then
 - `-v --verbose`: verbose
 
 ## How to Use
-By default, when called only with filename, it enters an interactive mode: you can specify a query and then ask it with return. After the query, you can ask another query and so on... To exit from the interactive mode, you have several options: `halt`, `exit`, or `quit`.
-In interactive mode, you can print the help with `help`. With `list` you get a list of available predicates.
+By default, when called only with filename, it enters an interactive mode: you can specify a query and then ask it with return. 
+After the query, you can ask another query and so on... 
+To exit from the interactive mode, you have several options: `halt`, `exit`, or `quit`.
+In interactive mode, you can print the help with `help`. 
+With `list` you get a list of available predicates.
+
+## Quick Tutorial
+TODO
+
+Since this program consider one line at the time, you cannot (by now), do something like line(I,L), add(I,1,I1), line(I1,L1). In general, you must have only one call to line/1,2 in a query.
 
 ## Syntax
 Variables are denoted with:
@@ -40,10 +48,10 @@ Variables are denoted with:
 - occurrences/3
 - startswith/2 line that starts with
 - endswith/2 line that ends with
-- reverse/2
+- reverse/2, both variable and ground
 - append/3
 - words/3
-
+- swap/4
 member/2 line that contains
 eval/2 used to evaluate the expression represented by the line
 number/1 checks that the element is a number
@@ -51,7 +59,6 @@ letter/1 checks that the element is a letter
 lowerLetter/1 checks that the element is a lower case letter
 upperLetter/1 checks that the element is an upper case letter
 alpha/1 checks that the element is an alphanumeric value
-forall/2 apply a pattern to all the elements
 match/2 apply pattern matching
 sumlist/2 sum of the list
 nth1/4 index list element separator character
@@ -72,14 +79,15 @@ nth1/4 index list element separator character
 - Count the words of all lines, where words are separated by a space: `line(L),words(L,N),write(N)`
 - Count the words of all lines, where words are separated by a certain character (`_` in this example): `line(L),words(L,"_",N),write(N)`
 - Print all the even positioned lines and index separated by a space: `line(I,L),even(I),write(L," ",I)`
-- Print the content of the lines reversed: `line(I,L), reverse(L,LRev), write(LRev)`
+- Print the content of the lines reversed: `line(I,L), reverse(L,LRev), write(LRev)`. If LRev is ground then returns true if the string reversed is equal to it. 
 - Check if the content of the line is the specified (print true or false): `line(4, line5)`
-- Append a string to a line: `line(I,L), append(L,"ciao",LO), write(LO)`. append(L,M,labc) -> find what is missing to have labc starting from L, append(L,"abc",labc) -> true / false, append(L, "abc", LO)->LO = Labc  
+- Append a string to a line: `line(I,L), append(L,"ciao",LO), write(LO)`. `append(L,M,labc)` -> find what is missing to have `labc` starting from L, `append(L,"abc",labc)` -> true / false, `append(L, "abc", LO)` -> `LO = Labc`  
 - Print the index of the line that is equal to abc: `line(I,"abc"),write(I)`
 - Perform arithmetic operations: `line(I,L),add(I,2,V),mul(V,I,V2),write(V2)`
 - Find the nth character of a line: `line(L),nth1(L,2,V),write(V)`
 - Find the nth word of a line: `line(L),nth1_word(L,2,V),write(V)`
 - Find the nth word of a line, where elements are separated by a certain character (`_` in this example): `line(L),nth1_word(L,2,"_",V),write(V)`
+- Swap the second and the fourth character (counting from 1): `line(L),swap(L,2,4,S),write(S)`
 
 Priority (still to implement)
 - Replace all the occurrences of a string with another: `line(L),replace(L,\"a\",\"b\",R),write(R)`

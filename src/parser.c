@@ -126,8 +126,7 @@ int parse_command_rec(char* str, term_list *tl, reference_list *rl) {
 
     // i think this is not a definitive solution
     if (str[index_str] == '\"') {
-        printf("Unexpected quote\n");
-        exit(COMMAND_ERROR);
+        print_parser_error(str,index_str, "Unexpected quote");   
     }
 
     while (str[index_str] != '\0') {

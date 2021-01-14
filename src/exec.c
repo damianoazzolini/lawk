@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_DEPRECATE // used for visual studio for strcpy and strncpy. TODO: replace with snprintf
+// #define _CRT_SECURE_NO_DEPRECATE // used for visual studio for strcpy and strncpy. TODO: replace with snprintf
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,10 +8,7 @@
 #include "defines.h"
 #include "exec.h"
 #include "parser.h"
-/* TODO:
 
-
-*/
 // #ifdef _WIN32
 // really primitive implementation
 // since getline is not available in windows
@@ -44,56 +41,11 @@ char* get_line(FILE* fp, size_t *len_l) {
 
 // You must free the result if result is non-NULL.
 // here to make more readable the mega if else in the other function
-// https://stackoverflow.com/questions/779875/what-function-is-to-replace-a-substring-from-a-string-in-c
-
-char* str_replace(char* source, char* find, char* replace) {
-	// DOES NOT WORK
-	char* result; // the return string
-	char* ins;    // the next insert point
-	char* tmp;    // varies
-	int len_rep;  // length of rep (the string to remove)
-	int len_with; // length of with (the string to replace rep with)
-	int len_front; // distance between rep and end of last rep
-	int count;    // number of replacements
-
-	// sanity checks and initialization
-	if (source == NULL || replace == NULL || find == NULL) {
-		return NULL;
-	}
-	len_rep = strlen(find);
-	if (len_rep == 0)
-		return NULL; // empty rep causes infinite loop during count
-	len_with = strlen(replace);
-
-	// count the number of replacements needed
-	ins = source;
-	for (count = 0; (tmp = strstr(ins, replace)); ++count) {
-		ins = tmp + len_rep;
-	}
-
-	tmp = result = malloc(strlen(source) + (len_with - len_rep) * count + 1);
-
-	if (!result)
-		return NULL;
-
-	// first time through the loop, all the variable are set correctly
-	// from here on,
-	//    tmp points to the end of the result string
-	//    ins points to the next occurrence of rep in orig
-	//    orig points to the remainder of orig after "end of rep"
-	while (count--) {
-		ins = strstr(source, find);
-		len_front = ins - source;
-		tmp = strncpy(tmp, source, len_front) + len_front;
-		tmp = strcpy(tmp, replace) + len_with;
-		source += len_front + len_rep; // move to next "end of rep"
-	}
-	// strcpy(tmp, source);
-	snprintf(tmp, strlen(source) + (len_with - len_rep) * count + 1, "%s", source);
-	return result;
+char* str_replace(char* source __attribute__((unused)), char* find __attribute__((unused)), char* replace __attribute__((unused))) {
+	return NULL;
 }
 
-// TODO: it requires also the modification of the parser, to read a float
+// TODO
 /*
 int associate_float() {
 
@@ -123,14 +75,21 @@ int associate_int(reference_list *rl, char* name, int value) {
 
 
 // TODO: merge with the next function
-int associate_str_reference(reference_list* rl, char* name, char *value) {
+int associate_str(reference_list* rl, char* name, char *value, cr copy_or_ref) {
 	int i;
 	for (i = 0; i < rl->n_elements; i++) {
 		if (strcmp(rl->list[i].name, name) == 0) {
 			if (rl->list[i].t == LIST || rl->list[i].t == UNSET) {
-				rl->list[i].cont.list = value;
 				rl->list[i].t = LIST;
-				rl->list[i].to_free = 0;
+				if(copy_or_ref == REFERENCE) {
+					rl->list[i].cont.list = value;
+					rl->list[i].to_free = 0;
+				}
+				else {
+					rl->list[i].cont.list = malloc(strlen(value) + 2);
+					snprintf(rl->list[i].cont.list, strlen(value) + 1, "%s", value);
+					rl->list[i].to_free = 1;
+				}
 				return SUCCESS;
 			}
 			else {
@@ -142,28 +101,6 @@ int associate_str_reference(reference_list* rl, char* name, char *value) {
 
 	printf("Term %s not found - %s\n",name,value);
 	return FAILURE;
-}
-
-int associate_str_copy(reference_list* rl, char* name, char* value) {
-	int i;
-	for (i = 0; i < rl->n_elements; i++) {
-		if (strcmp(rl->list[i].name, name) == 0) {
-			if (rl->list[i].t == LIST || rl->list[i].t == UNSET) {
-				rl->list[i].cont.list = malloc(strlen(value) + 2);
-				snprintf(rl->list[i].cont.list, strlen(value) + 1, "%s", value);
-				rl->list[i].to_free = 1;
-				rl->list[i].t = LIST;
-				return SUCCESS;
-			}
-			else {
-				printf("Already set for: %s\n", rl->list[i].name);
-				return FAILURE;
-			}
-		}
-	}
-
-	printf("Term not found\n");
-	exit(TERM_NOT_FOUND);
 }
 
 // used to free the memory allocated in, for example,
@@ -423,7 +360,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			tmp[strlen(rl->list[i].cont.list)] = '\0';
 			if(isupper(t->argument_list[1][0])) {
 				// reverse(Line,Sorted)
-				associate_str_copy(rl, t->argument_list[1], tmp);
+				associate_str(rl, t->argument_list[1], tmp, COPY);
 				free(tmp);
 				tmp = NULL;
 				return SUCCESS;
@@ -477,7 +414,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 
 		tmp = str_replace(rl->list[i].cont.list, ts1, ts2);
 		if (tmp != NULL) {
-			associate_str_copy(rl, t->argument_list[3], tmp);
+			associate_str(rl, t->argument_list[3], tmp, COPY);
 			free(tmp);
 			tmp = NULL;
 			return SUCCESS;
@@ -498,19 +435,18 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		// append(L,M,labc) -> find what is missing to have labc starting from L
 		i = find_matching_index(rl, t->argument_list[0]);
 		if (rl->list[i].t == LIST) {
+			tmp = malloc(strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 2);
+			snprintf(tmp, strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 1, "%s%s", rl->list[i].cont.list, t->argument_list[1]);
+			
 			if (islower(t->argument_list[1][0]) && isupper(t->argument_list[2][0])) {
 				// append(L, "abc", LO)->LO = Labc
-				tmp = malloc(strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 2);
-				snprintf(tmp, strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 1, "%s%s", rl->list[i].cont.list, t->argument_list[1]);
-				associate_str_copy(rl, t->argument_list[2], tmp);
+				associate_str(rl, t->argument_list[2], tmp, COPY);
 				free(tmp);
 				tmp = NULL;
 				return SUCCESS;
 			}
 			else if (islower(t->argument_list[1][0]) && islower(t->argument_list[2][0])) {
 				// append(L,"abc",labc) -> true / false
-				tmp = malloc(strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 2);
-				snprintf(tmp, strlen(rl->list[i].cont.list) + strlen(t->argument_list[1]) + 1, "%s%s", rl->list[i].cont.list, t->argument_list[1]);
 				if (strcmp(tmp, t->argument_list[2]) == 0) {
 					// printf("true\n");
 					free(tmp);
@@ -533,7 +469,10 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				if (strcmp(rl->list[i].cont.list,t->argument_list[2]) == 0) {
 					// printf("false\n");
 					// strings are equal
-					associate_str_copy(rl, t->argument_list[1], "");
+					tmp = malloc(3);
+					snprintf(tmp,2,"%s","\"\"");
+					associate_str(rl, t->argument_list[1], tmp, COPY);
+					free(tmp);
 					return SUCCESS;
 				}
 				j = 0;
@@ -551,7 +490,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 					tmp[i] = t->argument_list[2][j + i];
 				}
 				tmp[i] = '\0';
-				associate_str_copy(rl, t->argument_list[1], tmp);
+				associate_str(rl, t->argument_list[1], tmp, COPY);
 				free(tmp);
 				tmp = NULL;
 				return SUCCESS;
@@ -564,6 +503,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 
 	}
 	else if(strcmp(t->functor, "first") == 0 || strcmp(t->functor, "last") == 0)  {
+		// TODO
 		// last(L,N,V): V are the last N chars of L
 		// last(L,N,ground): ground are the last N chars of L -> success/failure
 		// last(L,ground,V): V are the last ground chars of L
@@ -601,7 +541,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				tmp = malloc(2);
 				tmp[0] = rl->list[i].cont.list[atoi(t->argument_list[1])];
 				tmp[1] = '\0';
-				associate_str_copy(rl, t->argument_list[2], tmp);
+				associate_str(rl, t->argument_list[2], tmp, COPY);
 				free(tmp);
 				return SUCCESS;
 			}
@@ -615,10 +555,11 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 					exit(OUT_OF_RANGE);
 				}
 				else {
+					// FIX THIS: error when int is two or more chars
 					tmp = malloc(2);
 					tmp[0] = rl->list[i].cont.list[rl->list[j].cont.int_val];
 					tmp[1] = '\0';
-					associate_str_copy(rl, t->argument_list[2], tmp);
+					associate_str(rl, t->argument_list[2], tmp, COPY);
 					free(tmp);
 					return SUCCESS;
 				}
@@ -653,10 +594,10 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				snprintf(tmp, end - start + 1, "%s", rl->list[i].cont.list + start);
 				// tmp[end - prev_start] = '\0';
 				if (t->arity == 3) {
-					associate_str_copy(rl, t->argument_list[2], tmp);
+					associate_str(rl, t->argument_list[2], tmp, COPY);
 				}
 				else {
-					associate_str_copy(rl, t->argument_list[3], tmp);
+					associate_str(rl, t->argument_list[3], tmp, COPY);
 				}
 				free(tmp);
 				return SUCCESS;
@@ -706,7 +647,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		i = find_matching_index(rl, t->argument_list[0]);
 		v1 = atoi(t->argument_list[1]) - 1;
 		v2 = atoi(t->argument_list[2]) - 1;
-		if((size_t)v1 > strlen(rl->list[i].cont.list) || (size_t)v2 > strlen(rl->list[i].cont.list) || v1 < 0 || v2 < 0) {
+		if(v1 > (int)strlen(rl->list[i].cont.list) || v2 > (int)strlen(rl->list[i].cont.list) || v1 < 0 || v2 < 0) {
 			printf("Index out of string");
 			exit(OUT_OF_RANGE);
 		}
@@ -718,7 +659,7 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			
 		if(isupper(t->argument_list[3][0])) {
 			// swap(L,2,4,S)
-			associate_str_copy(rl,t->argument_list[3],tmp);
+			associate_str(rl,t->argument_list[3],tmp, COPY);
 			free(tmp);
 			return SUCCESS;
 		}
@@ -849,11 +790,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 			if (tl->list[0].arity == 2) {
 				// line(I,L)
 				associate_int(rl, tl->list[0].argument_list[0], l.number);
-				associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
+				associate_str(rl, tl->list[0].argument_list[1], l.content, REFERENCE);
 			}
 			else {
 				// line(L)
-				associate_str_reference(rl, tl->list[0].argument_list[0], l.content);
+				associate_str(rl, tl->list[0].argument_list[0], l.content, REFERENCE);
 			}
 
 			while (l.content != NULL) {
@@ -864,7 +805,6 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 					}
 				}
 
-				// TODO: check if something is to free in reference
 				free_ref_t_to_free(rl);
 
 				n_line_processed++;
@@ -879,11 +819,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 				if (tl->list[0].arity == 2) {
 					// line(I,L)
 					associate_int(rl, tl->list[0].argument_list[0], l.number);
-					associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
+					associate_str(rl, tl->list[0].argument_list[1], l.content, REFERENCE);
 				}
 				else {
 					// line(L)
-					associate_str_reference(rl, tl->list[0].argument_list[0], l.content);
+					associate_str(rl, tl->list[0].argument_list[0], l.content, REFERENCE);
 				}
 			}
 		}
@@ -897,7 +837,7 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 				// getline(&l.content,&l.len,fp);
 				// #endif
 				l.number = n_line_processed;
-				associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
+				associate_str(rl, tl->list[0].argument_list[1], l.content, REFERENCE);
 				while (l.content != NULL && l.number != num) {
 					n_line_processed++;
 					free(l.content);
@@ -908,7 +848,7 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 					// getline(&l.content,&l.len,fp);
 					// #endif
 					l.number = n_line_processed;
-					associate_str_reference(rl, tl->list[0].argument_list[1], l.content);
+					associate_str(rl, tl->list[0].argument_list[1], l.content, REFERENCE);
 				}
 				if (l.content == NULL) {
 					fprintf(outstream, "Line %d not found\n", num);
@@ -952,8 +892,6 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 						}
 					}
 					
-
-					// TODO: check if something is to free in reference
 					free_ref_t_to_free(rl);
 
 					n_line_processed++;
@@ -1016,10 +954,6 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 					}
 					
 					free(l.content);
-
-
-					// check if something is to free in reference, flag to_free that indicates
-					// that the string has been mallocd instead of reference
 					free_ref_t_to_free(rl);
 				}
 				else {

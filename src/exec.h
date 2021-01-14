@@ -1,6 +1,8 @@
 #pragma once
 #include "parser.h"
 
+typedef enum {COPY, REFERENCE} cr;
+
 typedef struct line {
 	int number;
 	size_t len;

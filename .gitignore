@@ -1,5 +1,6 @@
 *.o
-src/lawk
+lawk
 src/test.txt
 .vscode
 src/run_valgrind.sh
+try.sh

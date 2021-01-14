@@ -134,50 +134,18 @@ FILE *open_file(const char *file) {
 }
 
 char *read_command() {
-	// char* command = "line(1,L), write(L)"; // OK
-	// char* command = "line(1,L), length(L,N), write(N)"; // OK
-	// char* command = "line(L), length(L,6), write(L)"; // OK
-	// char *command = "line(I,L), even(I), write(L)"; // OK
-	// char *command = "line(I,L), odd(I), write(L)"; // OK
-	// char *command = "line(I,L),mod(I,3,0), write(L)"; // OK
-	// char *command = "line(I,L), lt(I,3), write(L)"; // OK 
-	// char *command = "line(I,L), gt(I,3), write(L)"; // OK 
-	// char *command = "line(I,L), length(L,N), lt(N,3), write(L)"; // OK
-	// char *command = "line(I,L),between(I,5,10), write(L)"; // OK
-	// char *command = "line(L),occurrences(L,\"l\",N),write(N)"; // OK
-	// char *command = "line(L),occurrences(L,\"li\",N),write(N)"; // OK
-	// char *command = "line(L),startswith(L,\"lin\"), write(L)"; // OK
-	// char *command = "line(L),endswith(L,\"a2\"), write(L)"; // OK
-	// char *command = "line(L),words(L,N),write(\"ciao \",L, \" \", N)"; // OK
-	// char* command = "line(I,L), reverse(L,LRev), write(LRev)"; // OK
-	// char* command = "line(I, \"linea5\"), write(I)"; // OK
-	// char* command = "line(4, \"linea5\")"; // OK
-	// char* command = "line(L),append(L,\"abc\",LO), write(LO)"; // OK
-	// char* command = "line(L),append(L,\"abc\",\"inea12abc\")"; // OK
-	// char* command = "line(L),append(L,M,\"inea12abc\"),write(L, \"-> \",M)"; // OK
-	// char* command = "line(L),append(L,M,\"inea12abc\"),write(L, \"-> \",M)"; // OK
-	// char* command = "line(I,L),add(I,2,V),mul(V,I,V2),write(V2)"; // OK
-	// char* command = "line(L),nth1(L,1,V),write(V)"; // OK 
-	// char* command = "line(L),nth1(L,2,V),write(V)"; // OK
-	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
-	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
-	// char* command = "line(I,L),nth1(L,2,\"hh\"),write(I)"; // OK
-
-
 	// ---- NOT OK
 	// char* command = "line(L),replace(L,\"a\",\"b\",R),write(R)"; // OK
 	// char* command = "line(I,L),nth1(L,2,\"45\"),write(I)"; 
 	// char* command = "line(I,L),nth1(L,2,45),write(I)";
 	// char* command = "line(L),member(L,\"abc\"),write(L)";
 	
-	
-	// char *command = "line(I,L), write(\"ciso\")"; // OK
-	// char *command = "line(L),words(L,\"_\",N),write(N)"; // NEED to modify parser, otherwise loop, now there is a fallback
 	char *command = malloc(256);
 	// size_t n;
 	printf("?- ");
 	// fgets cannot manage arrow keys
 	if(fgets(command, 256, stdin) == NULL) {
+		free(command);
 		command = NULL;
 	}
 	else {
@@ -194,6 +162,8 @@ int main(int argc, char **argv) {
 	FILE* fp, *outstream;
 	char *command_in;
 	double exec_time = 0.0;
+	// char **commands_history = NULL;
+	// int n_commands = 0;
 	// const char *homedir;
 
 	init_command_line_arguments(&cla);
@@ -207,9 +177,6 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv, &cla);
 
 	if (cla.filename == NULL) {
-		// filename = malloc(256);
-		// printf("Insert filename: ");
-		// scanf("%s",filename);
 		printf("Missing filename\n");
 		printf("%s\n",query_usage);
 		exit(MISSING_FILENAME);
@@ -247,6 +214,11 @@ int main(int argc, char **argv) {
 			print_detail_predicates();
 		}
 		else {
+			// commands_history = realloc(commands_history,sizeof(char *) * (n_commands + 1));
+			// commands_history[i] = malloc(strlen(command_in) + 2);
+			// snprintf(commands_history[i],strlen(command_in) + 1,"%s",command_in);
+			// n_commands++;
+
 			parse_command(command_in, &t_list, &ref_list);
 
 			outstream = stdout;
