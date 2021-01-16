@@ -788,10 +788,11 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 	// TODO: refactor: most part of the cases are similar and check the if else
 
 	if (strcmp("line", tl->list[0].functor) == 0) {
-		assert(tl->list[0].arity == 1 || tl->list[0].arity == 2);
-		assert(tl->list[0].argument_list[0] != NULL);
-		// assert(tl->list[0].argument_list[1] != NULL);
-
+		if((tl->list[0].arity != 1 && tl->list[0].arity != 2) || tl->list[0].argument_list[0] != NULL ) {
+			printf("Error in line\n");
+			return FAILURE;
+		}
+		
 		if ((isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 2 && isupper(tl->list[0].argument_list[1][0])) || (isupper(tl->list[0].argument_list[0][0]) && tl->list[0].arity == 1) ) {
 			// #ifdef _WIN32
 			l.content = get_line(fp,&l.len);

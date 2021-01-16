@@ -25,5 +25,8 @@ error.o: src/error.c src/error.h
 clean:
 	@rm lawk *.o
 
+install:
+	cp lawk /usr/local/bin/
+
 # check:
 # 	@echo "tests"
