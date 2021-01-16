@@ -379,7 +379,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		}
 		else {
 			printf("Unable to reverse\n");
-			exit(REVERSE_FAILURE);
+			// exit(REVERSE_FAILURE);
+			return FAILURE;
 		}	
 	}
 	else if (strcmp(t->functor, "replace") == 0) {
@@ -498,7 +499,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		}
 		else {
 			printf("Unable to append\n");
-			exit(APPEND_FAILURE);
+			return FAILURE;
+			// exit(APPEND_FAILURE);
 		}
 
 	}
@@ -524,7 +526,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		}
 		else {
 			printf("%s error\n", strcmp(t->functor, "first") == 0 ? "first" : "last");
-			exit(COMMAND_ERROR);
+			return FAILURE;
+			// exit(COMMAND_ERROR);
 		}
 	}
 	else if(strcmp(t->functor, "nth1") == 0) {
@@ -535,7 +538,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			// nth1(Line,3,Char)
 			if(atoi(t->argument_list[1]) > (int)strlen(rl->list[i].cont.list)) {
 				printf("Unable to access index %d of line\n",atoi(t->argument_list[1]));
-				exit(OUT_OF_RANGE);
+				return FAILURE;
+				// exit(OUT_OF_RANGE);
 			}
 			else {
 				tmp = malloc(2);
@@ -552,7 +556,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 				if(rl->list[j].t == INT) {
 					if(rl->list[j].cont.int_val > (int)strlen(rl->list[i].cont.list)) {
 					printf("Unable to access index %d of line\n",rl->list[j].cont.int_val);
-					exit(OUT_OF_RANGE);
+					return FAILURE;
+					// exit(OUT_OF_RANGE);
 				}
 				else {
 					// FIX THIS: error when int is two or more chars
@@ -604,7 +609,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			}
 			else {
 				printf("Unable to access nth\n");
-				exit(NTH_ERROR);
+				return FAILURE;
+				// exit(NTH_ERROR);
 			}
 		}
 		else if ((t->arity == 3 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[2][0]))) || (t->arity == 4 && (isdigit(t->argument_list[1][0]) && islower(t->argument_list[3][0])))) {
@@ -637,7 +643,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			}
 			else {
 				printf("Unable to access nth\n");
-				exit(NTH_ERROR);
+				return FAILURE;
+				// exit(NTH_ERROR);
 			}
 		}
 
@@ -684,7 +691,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 		
 		if (rl->list[i].t != INT && rl->list[i].t != FLOAT) {
 			printf("Expected int or float\n");
-			exit(EXPECTED_NUMBER);
+			return FAILURE;
+			// exit(EXPECTED_NUMBER);
 		}
 
 		j = rl->list[i].cont.int_val; // this works only for int
@@ -722,7 +730,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			}
 			else {
 				printf("Operation inexistent\n");
-				exit(UNKNOWN_FUNCTOR);
+				return FAILURE;
+				// exit(UNKNOWN_FUNCTOR);
 			}
 
 		}
@@ -732,7 +741,8 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 
 			if (rl->list[i].t != INT && rl->list[i].t != FLOAT) {
 				printf("Expected int or float\n");
-				exit(EXPECTED_NUMBER);
+				return FAILURE;
+				// exit(EXPECTED_NUMBER);
 			}
 
 			v1 = rl->list[i].cont.int_val; // this works only for int
@@ -751,13 +761,15 @@ int apply_rule(line *l, term_t* t, reference_list* rl) {
 			}
 			else {
 				printf("Operation inexistent\n");
-				exit(UNKNOWN_FUNCTOR);
+				return FAILURE;
+				// exit(UNKNOWN_FUNCTOR);
 			}
 		}
 	}
 	else {
 		printf("Predicate not found\n");
-		exit(PREDICATE_NOT_FOUND);
+		return FAILURE;
+		// exit(PREDICATE_NOT_FOUND);
 	}
 
 	return FAILURE;
@@ -852,7 +864,8 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 				}
 				if (l.content == NULL) {
 					fprintf(outstream, "Line %d not found\n", num);
-					exit(LINE_NOT_FOUND);
+					return FAILURE;
+					// exit(LINE_NOT_FOUND);
 				}
 				
 				for (i = 1; i < tl->n_elements; i++) {
@@ -868,7 +881,8 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 			}
 			else {
 				fprintf(outstream, "Line should be a number %s\n", tl->list[0].argument_list[0]);
-				exit(CONVERSION_STRING_INT_FAILURE);
+				return FAILURE;
+				// exit(CONVERSION_STRING_INT_FAILURE);
 			}
 		}
 		else {
@@ -934,7 +948,8 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 					}
 					if (l.content == NULL) {
 						fprintf(outstream, "Line %d not found\n", num);
-						exit(LINE_NOT_FOUND);
+						return FAILURE;
+						// exit(LINE_NOT_FOUND);
 					}
 
 					if (strcmp(l.content, tl->list[0].argument_list[1]) == 0) {
@@ -950,7 +965,8 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 						}
 					}
 					else if (strcmp(l.content, tl->list[0].argument_list[1]) != 0 && tl->n_elements == 1) {
-						printf("false\n");
+						// printf("false\n");
+						return FAILURE;
 					}
 					
 					free(l.content);
@@ -958,11 +974,13 @@ double exec_command(FILE *fp, term_list* tl, reference_list* rl, FILE *outstream
 				}
 				else {
 					fprintf(outstream, "Line should be a number %s\n", tl->list[0].argument_list[0]);
-					exit(CONVERSION_STRING_INT_FAILURE);
+					return FAILURE;
+					// exit(CONVERSION_STRING_INT_FAILURE);
 				}
 			}
 			else {
 				printf("case not covered\n");
+				return FAILURE;
 			}
 		}
 
