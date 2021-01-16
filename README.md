@@ -41,27 +41,27 @@ Variables are denoted with:
 - `length/2` - `length(+Line,?Len)`: `Len` represents the length of the line, true if the length of the line is equal to `Len`
 - `even/1` - `even(+Number)`: true if `Number` is even
 - `odd/1` - `odd(+Number)`: true if `Number` is odd
-- `mod/3` - `mod(+Number,-Mod,-Res)`: `Res` is `Number` modulo `Mod`
+- `mod/3` - `mod(+Number,+Mod,-Res)`: `Res` is `Number` modulo `Mod`
 - `lt/2` - `lt(+NumberA,+NumberB)`: true if `NumberA` is less than `NumberB` (arithmetic <)
 - `gt/2` - `gt(+NumberA,+NumberB)`: true if `NumberA` is greater than `NumberB` (arithmetic >)
-- between/3
-- occurrences/3
-- startswith/2 line that starts with
-- endswith/2 line that ends with
-- reverse/2, both variable and ground
-- append/3
-- words/3
-- swap/4
-member/2 line that contains
-eval/2 used to evaluate the expression represented by the line
-number/1 checks that the element is a number
-letter/1 checks that the element is a letter
-lowerLetter/1 checks that the element is a lower case letter
-upperLetter/1 checks that the element is an upper case letter
-alpha/1 checks that the element is an alphanumeric value
-match/2 apply pattern matching
+- `between/3` - `between(+Number,+Lower,+Upper)`: true if `Lower < Number < Upper`
+- `occurrences/3` - `occurrences(+Line,+Char,?Occ)`: `Occ` is the number of occurrences of char `Char` in line `L`, `Occ` can be a number
+- `startswith/2` - `startswith(+Line,+Str)`: succeeds if the line starts with `Str`
+- `endswith/2` - `endswith(+Line,+Str)`: succeeds if the line ends with `Str`
+- `reverse/2` - `reverse(+Line,?Rev)`: `Rev` is `Line` reversed, `Rev` can be a constant
+- `append/3` - `append(+Line,?ToApp,?Res)`: append `ToApp` to `Line`, `ToApp` and `Res` can be constants
+- `words/2,3` - `words(+Line,+Sep,?Count)`: `Count` is the number of words of `Line`, where words are separated by `Sep`. Can be used also as `word(+Line,?Count)`, with space as default separator
+- `swap/4` - `swap(+Line,+PosA,+PosB,?Res)`: `Res` is `Line` where chars in `PosA` and `PosB` are swapped. `Res` can be ground
+- `nth1/3` - `nth1(+Line,+Nth,?Res)`: `Res` is the `Nth` char of `Line`, `Res` can be ground
+<!-- member/2 line that contains -->
+<!-- eval/2 used to evaluate the expression represented by the line -->
+<!-- number/1 checks that the element is a number -->
+<!-- letter/1 checks that the element is a letter -->
+<!-- lowerLetter/1 checks that the element is a lower case letter -->
+<!-- upperLetter/1 checks that the element is an upper case letter -->
+<!-- alpha/1 checks that the element is an alphanumeric value -->
+<!-- match/2 apply pattern matching -->
 sumlist/2 sum of the list
-nth1/4 index list element separator character
 
 # Implemented Predicates with Examples
 - Print the first line: `line(1,L), write(L)`
