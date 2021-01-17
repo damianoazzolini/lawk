@@ -137,7 +137,7 @@ int parse_command_rec(char* str, term_list *tl, reference_list *rl) {
         if (isupper(str[index_str])) {
             // fix it as below for lower
             (index_str)++;
-            while ( (islower(str[index_str]) || isupper(str[index_str]) || isdigit(str[index_str]) ) && str[index_str] != '\"' && str[index_str] != '\0') {
+            while ( (islower(str[index_str]) || isupper(str[index_str]) || isdigit(str[index_str]) || (str[index_str] == '_') ) && str[index_str] != '\"' && str[index_str] != '\0') {
                 var_name[var_pos] = str[index_str];
                 var_pos++;
                 (index_str)++;
@@ -155,7 +155,7 @@ int parse_command_rec(char* str, term_list *tl, reference_list *rl) {
             // this is a constant or compound
             // allow aB24
             (index_str)++;
-            while ( (islower(str[index_str]) || isupper(str[index_str]) || isdigit(str[index_str]) ) && str[index_str] != '\"' && str[index_str] != '\0') {
+            while ( (islower(str[index_str]) || isupper(str[index_str]) || isdigit(str[index_str]) || (str[index_str] == '_') ) && str[index_str] != '\"' && str[index_str] != '\0') {
                 var_name[var_pos] = str[index_str];
                 var_pos++;
                 (index_str)++;
