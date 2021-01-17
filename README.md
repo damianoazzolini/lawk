@@ -5,10 +5,11 @@ Perform operations on files, a la grep/awk ecc, but with a logic-like language.
 ```
 cd src
 make
+sudo make install
 ```
 and then
 ```
-./lawk <filename> [OPTIONS]
+lawk <filename> [OPTIONS]
 ```
 
 ## Command Line Arguments
